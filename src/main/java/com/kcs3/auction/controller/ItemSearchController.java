@@ -39,9 +39,15 @@ public class ItemSearchController {
                                                                 @RequestParam(required = false) String category,
                                                                 @RequestParam(required = false) Integer tradingMethod,
                                                                 @RequestParam(required = false) String region,
+                                                                @RequestParam(required = false) String keyword,
                                                                 @RequestParam String status
                                                                 ) {
-        return ResponseDto.ok(itemListService.getProgressItems(category, tradingMethod, region, status, pageable));
+        if(keyword != null){
+            return ResponseDto.ok(itemListService.getProgressItems(category, tradingMethod, region,status, pageable));
+        }else{
+            return ResponseDto.ok(itemListService.getSearchItems(keyword));
+        }
+
 
     }
 

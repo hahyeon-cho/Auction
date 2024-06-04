@@ -1,6 +1,7 @@
 package com.kcs3.auction.service;
 
 
+import com.kcs3.auction.document.ItemDocument;
 import com.kcs3.auction.dto.HotItemListDto;
 import com.kcs3.auction.dto.HotItemsDto;
 import com.kcs3.auction.dto.ProgressItemListDto;
@@ -11,12 +12,18 @@ import com.kcs3.auction.repository.AuctionInfoRepository;
 import com.kcs3.auction.repository.ItemRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +37,27 @@ public class ItemListService {
 
 
     private final RedisTemplate<String, HotItemsDto> redisTemplate;
+    @Autowired
+    private ElasticsearchOperations elasticsearchOperations;
+
+    public ProgressItemListDto getSearchItems(String keyword) {
+        Query query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .match(m -> m
+                                .field("itemTitle")
+                                .query(keyword)
+                        )
+                )
+                .build();
+
+        SearchHits<ItemDocument> searchHits = elasticsearchOperations.search(query, ItemDocument.class);
+
+        List<ItemDocument> items = searchHits.getSearchHits().stream()
+                .map(hit -> hit.getContent())
+                .toList();
+
+        return null;
+    }
 
     /**
      * 경매진행중인 아이템 목록 조회 - 서비스 로직

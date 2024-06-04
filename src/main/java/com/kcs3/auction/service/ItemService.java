@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcs3.auction.document.ItemDocument;
 import com.kcs3.auction.dto.*;
 import com.kcs3.auction.entity.*;
 import com.kcs3.auction.repository.*;
@@ -52,6 +53,8 @@ public class ItemService {
     private final UserRepository userRepository;
     @Autowired
     private final AlarmRepository alarmRepository;
+    @Autowired
+    private final ItemElasticsearchRepository itemElasticsearchRepository;
 
     @Autowired
     private RegionRepository regionRepository;
@@ -186,6 +189,12 @@ public class ItemService {
         for (ItemImage itemImage : itemImages) {
             itemImageRepository.save(itemImage);
         }
+
+        //엘라스틱 저장 로직
+        itemElasticsearchRepository.save(ItemDocument.builder()
+                .itemTitle(auctionProgressItem.getItemTitle())
+                .itemId(item.getItemId())
+                .build());
     }
 
     // 임베딩 값 저장 서비스 메서드 수정
