@@ -75,7 +75,7 @@ tasks.named('test') {
 
 bootJar {
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	mainClass = 'com.kcs3.auction.Application'
+	mainClass = 'com.kcs3.auction.AuctionApplication'
 }
 
 jar {
