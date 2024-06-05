@@ -56,6 +56,7 @@ public class ItemListService {
                 .map(hit -> hit.getContent())
                 .toList();
 
+        log.info(items.size()+"검색 아이템 사이즈");
         return null;
     }
 

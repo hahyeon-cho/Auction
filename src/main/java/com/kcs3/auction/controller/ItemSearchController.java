@@ -42,7 +42,7 @@ public class ItemSearchController {
                                                                 @RequestParam(required = false) String keyword,
                                                                 @RequestParam String status
                                                                 ) {
-        if(keyword != null){
+        if(keyword == null){
             return ResponseDto.ok(itemListService.getProgressItems(category, tradingMethod, region,status, pageable));
         }else{
             return ResponseDto.ok(itemListService.getSearchItems(keyword));
