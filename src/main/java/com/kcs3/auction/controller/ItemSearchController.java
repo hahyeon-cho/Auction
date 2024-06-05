@@ -28,7 +28,6 @@ public class ItemSearchController {
     private ItemService itemService;
 
 
-
     /**
      * 경매진행중인 아이템 목록 조회 - API
      * 경매완료된 아이템 목록 조회

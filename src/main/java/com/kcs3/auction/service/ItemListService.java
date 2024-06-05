@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -147,6 +148,11 @@ public class ItemListService {
     }
 
 
+    @Scheduled(cron = "* */5 * * * *")
+    public void scheduleHotAndNewItems() {
+        saveHotItems();
+        saveNewItems();
+    }
 
     /**
      * 핫아이템 Redis 저장 서비스 로직
