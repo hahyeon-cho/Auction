@@ -40,7 +40,7 @@ public class ItemListService {
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
 
-    public ProgressItemListDto getSearchItems(String keyword) {
+    public ProgressItemListDto getSearchItems(String keyword, String category, Integer method, String region, String status) {
         Query query = NativeQuery.builder()
                 .withQuery(q -> q
                         .match(m -> m
@@ -52,12 +52,20 @@ public class ItemListService {
 
         SearchHits<ItemDocument> searchHits = elasticsearchOperations.search(query, ItemDocument.class);
 
-        List<ItemDocument> items = searchHits.getSearchHits().stream()
-                .map(hit -> hit.getContent())
+        List<Long> itemIds = searchHits.getSearchHits().stream()
+                .map(hit -> hit.getContent().itemId())
                 .toList();
 
-        log.info(items.size()+"검색 아이템 사이즈");
-        return null;
+        Slice<AuctionProgressItem> progressItems = itemRepository.findByProgressItemWithLocationAndMethodAndRegionAndItemIds(category,method,region,itemIds);
+
+        List<ProgressItemsDto> itemtemDtoList = new ArrayList<>();
+        for (AuctionProgressItem progressItem : progressItems) {
+            ProgressItemsDto progressItemsDto = ProgressItemsDto.fromProgressEntity(progressItem);
+            itemtemDtoList.add(progressItemsDto);
+        }
+        return ProgressItemListDto.builder()
+                .progressItemListDto(itemtemDtoList)
+                .build();
     }
 
     /**

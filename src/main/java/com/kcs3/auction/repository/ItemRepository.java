@@ -4,6 +4,7 @@ package com.kcs3.auction.repository;
 import com.kcs3.auction.entity.AuctionCompleteItem;
 import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.entity.Item;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,9 +42,6 @@ public interface  ItemRepository extends JpaRepository<Item, Long> {
 
 
 
-
-
-
         /**
          *  완료된 경매 아이템 목록 조회
          */
@@ -61,6 +59,26 @@ public interface  ItemRepository extends JpaRepository<Item, Long> {
                 @Param("method") Integer method,
                 @Param("region") String region,
                 Pageable pageable);
+
+
+        /**
+         *  검색아이템 기반 필터링
+         */
+        @Query("SELECT ap FROM AuctionProgressItem ap " +
+                "JOIN FETCH ap.item item " +
+                "JOIN FETCH item.category category " +
+                "JOIN FETCH item.tradingMethod method " +
+                "JOIN FETCH item.region region " +
+                "WHERE (:category IS NULL OR category.category = :category) " +
+                "AND (:method IS NULL OR method.tradingMethod = :method OR method.tradingMethod = 3) " +
+                "AND (:region IS NULL OR region.region = :region) " +
+                "AND item.itemId IN :itemIds " +
+                "ORDER BY item.itemId DESC")
+        Slice<AuctionProgressItem> findByProgressItemWithLocationAndMethodAndRegionAndItemIds(
+                @Param("category") String category,
+                @Param("method") Integer method,
+                @Param("region") String region,
+                @Param("itemIds") List<Long> itemIds);
 
 
         /**

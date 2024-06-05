@@ -45,7 +45,7 @@ public class ItemSearchController {
         if(keyword == null){
             return ResponseDto.ok(itemListService.getProgressItems(category, tradingMethod, region,status, pageable));
         }else{
-            return ResponseDto.ok(itemListService.getSearchItems(keyword));
+            return ResponseDto.ok(itemListService.getSearchItems(keyword,category, tradingMethod, region,status));
         }
 
 
