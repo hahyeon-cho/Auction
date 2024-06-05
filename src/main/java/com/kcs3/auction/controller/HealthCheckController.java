@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/health")
+@RequestMapping("/actuator")
 public class HealthCheckController {
 
-    @GetMapping
+    @GetMapping("/health")
     public ResponseDto<Boolean> getHealthCheck(){
         return ResponseDto.ok(true);
     }
