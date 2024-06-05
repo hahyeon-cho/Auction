@@ -22,6 +22,7 @@ public class AuctionItemRequest {
     @NotBlank
     public String contents;
 
+    public String region;
     @NotBlank
     public LocalDateTime finish_time;
 }

@@ -134,9 +134,9 @@ public class ItemService {
         User user = userRepository.findByUserId(customOAuth2User.getUserId())
                 .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
 
-        Region region = regionRepository.findByRegion("전체");
+        Region region = regionRepository.findByRegion(request.region);
         if (region == null) {
-            throw new RuntimeException("Region '전체' not found");
+            region = regionRepository.findByRegion("기타");
         }
 
         Item item = new Item();

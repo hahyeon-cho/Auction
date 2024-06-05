@@ -102,6 +102,7 @@ public class ItemUploadController {
             @RequestParam("start_price") int startPrice,
             @RequestParam(value = "buy_now_price", required = false) Integer buyNowPrice,  // Optional 제거
             @RequestParam("contents") String contents,
+            @RequestParam("address") String region,
             @RequestParam("finish_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime finishTime
     ) throws IOException {
 
@@ -114,6 +115,7 @@ public class ItemUploadController {
         request.buy_now_price = buyNowPrice;  // Integer 타입
         request.contents = contents;
         request.finish_time = finishTime;
+        request.region = region;
 
         itemService.postItem(request);
 
