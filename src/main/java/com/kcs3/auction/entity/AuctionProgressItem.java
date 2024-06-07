@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,6 +68,9 @@ public class AuctionProgressItem extends BaseEntity {
 
     @Column(nullable = false)
     private Integer maxPrice;
+
+    @Version
+    private Integer version;
 
     public static class AuctionProgressItemBuilder {
         public AuctionProgressItemBuilder startPrice(int startPrice) {
