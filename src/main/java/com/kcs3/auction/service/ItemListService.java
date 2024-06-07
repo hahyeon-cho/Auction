@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -75,6 +76,8 @@ public class ItemListService {
      * 모든 아이템 목록 조회 - 서비스 로직
      */
 
+
+    @Transactional(readOnly = true)
     public ProgressItemListDto getProgressItems(String category, Integer method, String region, String status, Pageable pageable) {
         List<ProgressItemsDto> itemtemDtoList = new ArrayList<>();
 
