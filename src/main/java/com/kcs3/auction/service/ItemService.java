@@ -194,6 +194,7 @@ public class ItemService {
         itemElasticsearchRepository.save(ItemDocument.builder()
                 .itemTitle(auctionProgressItem.getItemTitle())
                 .itemId(item.getItemId())
+                .createAt(item.getCreatedAt())
                 .build());
     }
 
