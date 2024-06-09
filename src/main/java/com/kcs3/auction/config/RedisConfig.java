@@ -20,24 +20,32 @@ import java.util.List;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.redis.cluster.nodes}")
-    private String redisClusterNodes;
+    @Value("${spring.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.redis.port}")
+    private String redisPort;
+
+
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        List<String> nodes = Collections.singletonList(redisClusterNodes);
-        RedisClusterConfiguration clusterConfiguration = new RedisClusterConfiguration(nodes);
-        return new LettuceConnectionFactory(clusterConfiguration);
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(redisHost);
+        redisStandaloneConfiguration.setPort(Integer.parseInt(redisPort));
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration);
+        return lettuceConnectionFactory;
     }
 
     @Bean
-    public RedisTemplate<String, HotItemsDto> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    public RedisTemplate<?,?> redisTemplate() {
         RedisTemplate<String, HotItemsDto> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
         redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
     }
+
 }
