@@ -1,10 +1,9 @@
 package com.kcs3.auction.service;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+
 import com.kcs3.auction.document.ItemDocument;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -20,11 +19,9 @@ public class ElasticsearchService {
     public Optional<List<ItemDocument>> searchItems(String keyword) {
         Query query = NativeQuery.builder()
                 .withQuery(q -> q
-                        .multiMatch(m -> m
-                                .fields(List.of("itemTitle"))
+                        .match(m -> m
+                                .field("itemTitle")
                                 .query(keyword)
-                                .fuzziness("AUTO") //모호한 검색 허용
-                                .operator(Operator.And) //검색 단어가 모두 포함
                         )
                 )
                 .build();
@@ -38,3 +35,6 @@ public class ElasticsearchService {
         return items.isEmpty() ? Optional.empty() : Optional.of(items);
     }
 }
+
+
+
