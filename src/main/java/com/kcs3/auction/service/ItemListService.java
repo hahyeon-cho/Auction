@@ -2,6 +2,7 @@ package com.kcs3.auction.service;
 
 
 import com.kcs3.auction.document.ItemDocument;
+import com.kcs3.auction.document.ItemSearchDocument;
 import com.kcs3.auction.dto.HotItemListDto;
 import com.kcs3.auction.dto.HotItemsDto;
 import com.kcs3.auction.dto.ProgressItemListDto;
@@ -52,12 +53,14 @@ public class ItemListService {
                 )
                 .build();
 
-        SearchHits<ItemDocument> searchHits = elasticsearchOperations.search(query, ItemDocument.class);
+        SearchHits<ItemSearchDocument> searchHits = elasticsearchOperations.search(query, ItemSearchDocument.class);
 
         List<Long> itemIds = searchHits.getSearchHits().stream()
                 .map(hit -> hit.getContent().itemId())
                 .toList();
 
+
+        log.info("아이템 사이즈"+itemIds.size());
         Slice<AuctionProgressItem> progressItems = itemRepository.findByProgressItemWithLocationAndMethodAndRegionAndItemIds(category,method,region,itemIds);
 
         List<ProgressItemsDto> itemtemDtoList = new ArrayList<>();
