@@ -18,6 +18,7 @@ import com.kcs3.auction.exception.ErrorCode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -344,14 +345,31 @@ public class ItemService {
 
     // 플라스크에서 받은 아이템 list dto로 작성
     public List<RecommendDto> getItemsByIds(List<Long> itemIds) {
+        // 받은 리스트 출력
+        System.out.println("Received item IDs: " + itemIds);
+
         List<AuctionProgressItem> auctionItems = auctionProgressItemRepository.findAllById(itemIds);
-        return auctionItems.stream()
-                .map(item -> new RecommendDto(
-                        item.getItem().getItemId(),
-                        item.getItemTitle(),
-                        item.getThumbnail(),
-                        item.getMaxPrice()))
+
+        // 아이템 아이디를 키로 하는 맵을 생성
+        Map<Long, AuctionProgressItem> itemMap = auctionItems.stream()
+                .collect(Collectors.toMap(item -> item.getItem().getItemId(), item -> item));
+
+        // 원래의 순서를 유지하면서 DTO 리스트 생성
+        List<RecommendDto> recommendDtos = itemIds.stream()
+                .map(itemId -> {
+                    AuctionProgressItem item = itemMap.get(itemId);
+                    return new RecommendDto(
+                            item.getItem().getItemId(),
+                            item.getItemTitle(),
+                            item.getThumbnail(),
+                            item.getMaxPrice());
+                })
                 .collect(Collectors.toList());
+
+        // 반환하는 리스트 출력
+        System.out.println("Returning DTOs: " + recommendDtos);
+
+        return recommendDtos;
     }
 
 
