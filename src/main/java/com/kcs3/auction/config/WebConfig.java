@@ -1,25 +1,22 @@
 package com.kcs3.auction.config;
 
-
 import com.kcs3.auction.entity.Category;
 import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.repository.CategoryRepository;
 import com.kcs3.auction.repository.TradingMethodRepository;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TradingMethodRepository tradingMethodRepository;
+    private final CategoryRepository categoryRepository;
+    private final TradingMethodRepository tradingMethodRepository;
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
@@ -27,29 +24,22 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addConverter(new StringToCategoryConverter());
     }
 
-    //거래방법을 id에따라 거래방법이 분류되도록 해주는 컨버터
+    // 문자열 ID를 TradingMethod 엔티티로 변환하는 컨버터
     private class StringToTradingMethodConverter implements Converter<String, TradingMethod> {
         @Override
-        public TradingMethod convert(String source) {
+        public TradingMethod convert(@NonNull String source) {
             Long id = Long.parseLong(source);
-            Optional<TradingMethod> tradingMethod = tradingMethodRepository.findById(id);
-            if (!tradingMethod.isPresent()) {
-                throw new IllegalArgumentException("Invalid TradingMethod ID: " + source);
-            }
-            return tradingMethod.get();
+            return tradingMethodRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid TradingMethod ID: " + source));
         }
     }
 
-
-    //카테고리명을 id에따라 카테고리가 분류되도록 해주는 컨버터
+    // 문자열 이름을 Category 엔티티로 변환하는 컨버터
     private class StringToCategoryConverter implements Converter<String, Category> {
         @Override
-        public Category convert(String source) {
-            Optional<Category> category = categoryRepository.findByName(source);
-            if (!category.isPresent()) {
-                throw new IllegalArgumentException("Invalid category name: " + source);
-            }
-            return category.get();
+        public Category convert(@NonNull String source) {
+            return categoryRepository.findByName(source)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid category name: " + source));
         }
     }
 }
