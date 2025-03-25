@@ -1,41 +1,25 @@
 package com.kcs3.auction.entity;
 
-
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "AuctionProgressItem")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
 @DynamicUpdate
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AuctionProgressItem extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="auctionProgressItemId", nullable = false)
+    @Column(name = "auctionProgressItemId", nullable = false)
     private Long auctionProgressItemId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -72,12 +56,22 @@ public class AuctionProgressItem extends BaseEntity {
     @Version
     private Integer version;
 
-    public static class AuctionProgressItemBuilder {
-        public AuctionProgressItemBuilder startPrice(int startPrice) {
-            this.startPrice = startPrice;
-            this.maxPrice = startPrice;
-            return this;
-        }
+    @Builder
+    public AuctionProgressItem(
+            Item item, String itemTitle, String thumbnail,
+            int startPrice, Integer buyNowPrice, LocalDateTime bidFinishTime,
+            String location, User user, String maxPersonNickName, Integer maxPrice
+    ) {
+        this.item = item;
+        this.itemTitle = itemTitle;
+        this.thumbnail = thumbnail;
+        this.startPrice = startPrice;
+        this.buyNowPrice = buyNowPrice;
+        this.bidFinishTime = bidFinishTime;
+        this.location = location;
+        this.user = user;
+        this.maxPersonNickName = maxPersonNickName;
+        this.maxPrice = (maxPrice != null) ? maxPrice : startPrice;
     }
 
     public void updateAuctionMaxBid(User user, String nickname, int price) {

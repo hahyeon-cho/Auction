@@ -1,40 +1,41 @@
 package com.kcs3.auction.entity;
 
-
 import com.kcs3.auction.model.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="userId", nullable = false)
+    @Column(name = "userId", nullable = false)
     private Long userId;
 
     @Column(nullable = false, length = 255)
     private String userNickname;
 
-    @Column(nullable = false, length = 255, unique = true)  // 이메일 필드 추가
-    private String userEmail;  // 이메일
+    @Column(nullable = false, length = 255, unique = true)
+    private String userEmail;
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int userPoint;
 
-    @ElementCollection  // 리스트 매핑
+    @ElementCollection
     @CollectionTable(name = "user_cookies", joinColumns = @JoinColumn(name = "userId"))
     @Column(name = "cookie")
-    private List<Long> cookies = new ArrayList<>();  // 유저가 클릭한 물품 ID 리스트
+    private List<Long> cookies = new ArrayList<>();
+
+    @Builder
+    public User(String userNickname, String userEmail, int userPoint) {
+        this.userNickname = userNickname;
+        this.userEmail = userEmail;
+        this.userPoint = userPoint;
+    }
 }

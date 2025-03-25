@@ -1,41 +1,25 @@
 package com.kcs3.auction.entity;
 
-
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import java.util.List;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
+
+import java.util.List;
 
 @Entity
 @Table(name = "Item")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
 @DynamicUpdate
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Item extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="itemId", nullable = false)
+    @Column(name = "itemId", nullable = false)
     private Long itemId;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE) // 찜 삭제 설정
@@ -59,6 +43,21 @@ public class Item extends BaseEntity {
 
     @Column(nullable = false)
     private boolean isAuctionComplete;
+
+    @Builder
+    public Item(
+            User seller,
+            Category category,
+            TradingMethod tradingMethod,
+            Region region,
+            boolean isAuctionComplete
+    ) {
+        this.seller = seller;
+        this.category = category;
+        this.tradingMethod = tradingMethod;
+        this.region = region;
+        this.isAuctionComplete = isAuctionComplete;
+    }
 
     public void endAuction() {
         this.isAuctionComplete = true;

@@ -1,42 +1,25 @@
 package com.kcs3.auction.entity;
 
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import java.util.List;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.List;
 
 @Entity
 @Table(name = "ItemDetail")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
 @DynamicUpdate
-
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ItemDetail extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="itemDetailId", nullable = false)
+    @Column(name = "itemDetailId", nullable = false)
     private Long itemDetailId;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
@@ -48,6 +31,12 @@ public class ItemDetail extends BaseEntity {
 
     @OneToMany(mappedBy = "itemDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ItemImage> images;
+
+    @Builder
+    public ItemDetail(Item item, String itemDetailContent) {
+        this.item = item;
+        this.itemDetailContent = itemDetailContent;
+    }
 
     @Override
     public String toString() {

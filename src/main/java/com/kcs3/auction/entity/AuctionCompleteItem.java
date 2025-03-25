@@ -2,38 +2,24 @@ package com.kcs3.auction.entity;
 
 
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.DynamicUpdate;
+
+import java.time.LocalDateTime;
 
 
 @Entity
 @Table(name = "AuctionCompleteItem")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
-@DynamicUpdate
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AuctionCompleteItem extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="auctionCompleteItemId", nullable = false)
+    @Column(name = "auctionCompleteItemId", nullable = false)
     private Long auctionCompleteItemId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -64,4 +50,24 @@ public class AuctionCompleteItem extends BaseEntity {
 
     @Column(nullable = false)
     private boolean isBidComplete;
+
+    @Builder
+    public AuctionCompleteItem(
+            Item item, String itemTitle, String thumbnail,
+            int startPrice, Integer buyNowPrice, LocalDateTime bidFinishTime,
+            String location, User user,
+            String maxPersonNickName, Integer maxPrice, boolean isBidComplete
+    ) {
+        this.item = item;
+        this.itemTitle = itemTitle;
+        this.thumbnail = thumbnail;
+        this.startPrice = startPrice;
+        this.buyNowPrice = buyNowPrice;
+        this.bidFinishTime = bidFinishTime;
+        this.location = location;
+        this.user = user;
+        this.maxPersonNickName = maxPersonNickName;
+        this.maxPrice = maxPrice;
+        this.isBidComplete = isBidComplete;
+    }
 }
