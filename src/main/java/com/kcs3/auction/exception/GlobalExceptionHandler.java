@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {NoHandlerFoundException.class, HttpRequestMethodNotSupportedException.class})
     public ResponseDto<?> handleNoPageFoundException(Exception e) {
         log.error("handleNoPageFoundException() in GlobalExceptionHandler throw NoHandlerFoundException : {}", e.getMessage());
-        return ResponseDto.fail(new CommonException(ErrorCode.NOT_FOUND_END_POINT));
+        return ResponseDto.fail(new CommonException(ErrorCode.ENDPOINT_NOT_FOUND));
     }
 
     // @Validated 어노테이션을 사용하여 검증을 수행할 때 발생하는 예외
