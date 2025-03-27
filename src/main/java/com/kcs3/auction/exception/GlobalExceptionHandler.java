@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
         log.error("handleHttpMessageNotReadableException() in GlobalExceptionHandler throw HttpMessageNotReadableException : {}", e.getMessage());
         return ResponseDto.fail(new CommonException(ErrorCode.BAD_REQUEST_JSON));
     }
+
     // 지원되지 않는 HTTP 메소드를 사용할 때 발생하는 예외
     @ExceptionHandler(value = {NoHandlerFoundException.class, HttpRequestMethodNotSupportedException.class})
     public ResponseDto<?> handleNoPageFoundException(Exception e) {

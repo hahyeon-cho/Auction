@@ -34,6 +34,7 @@ public class AuctionCompleteItem extends BaseEntity {
 
     @Column(nullable = false)
     private int startPrice;
+
     private Integer buyNowPrice;
 
     @Column(nullable = false)
@@ -45,6 +46,7 @@ public class AuctionCompleteItem extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
     private User user;
+
     private String maxPersonNickName;
     private Integer maxPrice;
 
