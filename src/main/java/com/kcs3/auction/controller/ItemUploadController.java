@@ -7,6 +7,11 @@ import com.kcs3.auction.service.ItemService;
 import com.kcs3.auction.service.LikeService;
 import com.kcs3.auction.dto.LikeRequest;
 import com.kcs3.auction.dto.ResponseDto;
+import com.kcs3.auction.dto.SaveEmbeddingRequest;
+import com.kcs3.auction.exception.CommonException;
+import com.kcs3.auction.exception.ErrorCode;
+import com.kcs3.auction.service.ItemService;
+import com.kcs3.auction.service.LikeService;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -24,7 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -92,36 +97,15 @@ public class ItemUploadController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new NormalResponse(status, message));
     }
 
-    //물품등록
+    // 물품 등록
     @PostMapping(value = "/form/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<NormalResponse> postAuctionItem(
-            @RequestParam("title") String title,
-            @RequestParam("images") List<MultipartFile> images,
-            @RequestParam("category") Category category,
-            @RequestParam("trading_method") TradingMethod tradingMethod,
-            @RequestParam("start_price") int startPrice,
-            @RequestParam(value = "buy_now_price", required = false) Integer buyNowPrice,  // Optional 제거
-            @RequestParam("contents") String contents,
-            @RequestParam("address") String region,
-            @RequestParam("finish_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime finishTime
-    ) throws IOException {
+    public ResponseDto<?> postAuctionItem(
+        @RequestPart("data") ItemRegisterRequestDto requestDto,
+        @RequestPart("images") List<MultipartFile> images
+    ) {
+        itemService.postItem(requestDto, images);
 
-        AuctionItemRequest request = new AuctionItemRequest();
-        request.title = title;
-        request.images = images;
-        request.category = category;
-        request.trading_method = tradingMethod;
-        request.start_price = startPrice;
-        request.buy_now_price = buyNowPrice;  // Integer 타입
-        request.contents = contents;
-        request.finish_time = finishTime;
-        request.region = region;
-
-        itemService.postItem(request);
-
-        String message = "물품 등록을 성공하였습니다";
-        String status = "success";
-        return ResponseEntity.status(HttpStatus.CREATED).body(new NormalResponse(status, message));
+        return ResponseDto.ok("물품 등록을 성공하였습니다.");
     }
 
     //임베딩 저장
