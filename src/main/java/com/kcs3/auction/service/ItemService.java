@@ -268,21 +268,19 @@ public class ItemService {
     }
 
 
-
-//    이미지저장하고 url 반환
-
-    private ArrayList<String> saveFiles(List<MultipartFile> multipartFiles) throws IOException {
+    // S3Client에 이미지 저장 후 url 리스트 반환
+    private ArrayList<String> uploadImagesAndGetUrls(List<MultipartFile> images) throws IOException {
         ArrayList<String> urls = new ArrayList<>();
 
-        for(MultipartFile file:multipartFiles)
-        {
-            String fileName = file.getOriginalFilename();
+        for (MultipartFile img : images) {
+            String fileName = img.getOriginalFilename();
             ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(file.getSize());
-            metadata.setContentType(file.getContentType());
-            amazonS3Client.putObject(bucket,fileName,file.getInputStream(),metadata);
-            urls.add(amazonS3Client.getUrl(bucket,fileName).toString());
+            metadata.setContentLength(img.getSize());
+            metadata.setContentType(img.getContentType());
+            amazonS3Client.putObject(bucket, fileName, img.getInputStream(), metadata);
+            urls.add(amazonS3Client.getUrl(bucket, fileName).toString());
         }
+
         return urls;
     }
     private ItemDetail findDetailByItemId(Long itemId){
