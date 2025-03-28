@@ -7,14 +7,44 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcs3.auction.document.ItemDocument;
-import com.kcs3.auction.dto.*;
-import com.kcs3.auction.entity.*;
-import com.kcs3.auction.repository.*;
+import com.kcs3.auction.dto.CommentRequest;
+import com.kcs3.auction.dto.ItemDetailRequestDto;
+import com.kcs3.auction.dto.ItemEmbeddingRequestDto;
+import com.kcs3.auction.dto.ItemEmbeddingResponseDto;
+import com.kcs3.auction.dto.ItemRegisterRequestDto;
+import com.kcs3.auction.dto.QnaPostRequest;
+import com.kcs3.auction.dto.RecommendDto;
+import com.kcs3.auction.entity.Alarm;
+import com.kcs3.auction.entity.AuctionCompleteItem;
+import com.kcs3.auction.entity.AuctionProgressItem;
+import com.kcs3.auction.entity.Category;
+import com.kcs3.auction.entity.Item;
+import com.kcs3.auction.entity.ItemDetail;
+import com.kcs3.auction.entity.ItemImage;
+import com.kcs3.auction.entity.ItemQuestion;
+import com.kcs3.auction.entity.QnaComment;
+import com.kcs3.auction.entity.Recommend;
+import com.kcs3.auction.entity.Region;
+import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.entity.User;
-import com.kcs3.auction.repository.UserRepository;
-import com.kcs3.auction.utils.CustomOAuth2User;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
+import com.kcs3.auction.repository.AlarmRepository;
+import com.kcs3.auction.repository.AuctionCompleteItemRepository;
+import com.kcs3.auction.repository.AuctionProgressItemRepository;
+import com.kcs3.auction.repository.CategoryRepository;
+import com.kcs3.auction.repository.ItemDetailRepository;
+import com.kcs3.auction.repository.ItemElasticsearchRepository;
+import com.kcs3.auction.repository.ItemImageRepository;
+import com.kcs3.auction.repository.ItemQuestionRepository;
+import com.kcs3.auction.repository.ItemRepository;
+import com.kcs3.auction.repository.QnaCommentRepository;
+import com.kcs3.auction.repository.RecommendRepository;
+import com.kcs3.auction.repository.RegionRepository;
+import com.kcs3.auction.repository.TradingMethodRepository;
+import com.kcs3.auction.repository.UserRepository;
+import com.kcs3.auction.utils.AuthUserProvider;
+import com.kcs3.auction.utils.CustomOAuth2User;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,95 +52,97 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
 public class ItemService {
-    private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard()
-            .withRegion(Regions.AP_NORTHEAST_2) // 서울 리전
-            .build();
+
+    @Value("${EMBEDDING_SERVER_URL}")
+    private String embeddingServerUrl;
+
+    private final AuthUserProvider authUserProvider;
+
+    private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_NORTHEAST_2) // 서울 리전
+        .build();
+
+    private final UserRepository userRepository;
+
+    private final ItemRepository itemRepository;
+    private final ItemDetailRepository itemDetailRepository;
+
+    private final ItemQuestionRepository itemQuestionRepository;
+    private final QnaCommentRepository qnaCommentRepository;
+
+    private final AuctionProgressItemRepository auctionProgressItemRepository;
+    private final AuctionCompleteItemRepository auctionCompleteItemRepository;
+
+
+    private final AlarmRepository alarmRepository;
+
+    private final ItemElasticsearchRepository itemElasticsearchRepository;
+    private final ObjectMapper objectMapper;
     @Value("${cloud.aws.s3.bucketName}")
     private String bucket;
-    @Autowired
-    private final ItemRepository itemRepository;
-    @Autowired
-    private final AuctionProgressItemRepository auctionProgressItemRepository;
-    @Autowired
-    private final AuctionCompleteItemRepository auctionCompleteItemRepository;
-    @Autowired
-    private final ItemDetailRepository itemDetailRepository;
-    @Autowired
-    private final ItemQuestionRepository itemQuestionRepository;
-    @Autowired
-    private final QnaCommentRepository qnaCommentRepository;
-    @Autowired
-    private final UserRepository userRepository;
-    @Autowired
-    private final AlarmRepository alarmRepository;
-    @Autowired
-    private final ItemElasticsearchRepository itemElasticsearchRepository;
 
-    @Autowired
-    private RegionRepository regionRepository;
+    private final CategoryRepository categoryRepository;
+    private final TradingMethodRepository tradingMethodRepository;
+    private final RegionRepository regionRepository;
 
-    @Autowired
-    private  ItemImageRepository itemImageRepository;
+    private ItemImageRepository itemImageRepository;
 
-    @Autowired
     private RecommendRepository recommendRepository;
 
-    private final ObjectMapper objectMapper;
+    private final WebClient webClient;
 
-    public List<String> getAlarm(){
+
+    public List<String> getAlarm() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
         User user = userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
+            .orElseThrow(() -> new CommonException(ErrorCode.USER_NOT_FOUND));
 
         List<Alarm> alarms = alarmRepository.findTop4ByUserOrderByCreatedAtDesc(user);
 
-        return alarms.stream()
-                .map(Alarm::getAlarmContent)
-                .collect(Collectors.toList());
+        return alarms.stream().map(Alarm::getAlarmContent).collect(Collectors.toList());
 
     }
-    public void postQna(QnaPostRequest request, Long itemId){
 
-        ItemQuestion itemQuestion = new ItemQuestion();
-        itemQuestion.setItemDetailId(this.findDetailByItemId(itemId));
-        itemQuestion.setQuestionContents(request.getQuestionContents());
-        itemQuestion.setQuestionUserId(request.getQuestionUserId());
+    public void postQna(QnaPostRequest request, Long itemId) {
+
+        ItemQuestion itemQuestion = ItemQuestion.builder().itemDetailId(this.findDetailByItemId(itemId)) // 아이템 상세 ID 설정
+            .questionContents(request.getQuestionContents()) // 질문 내용 설정
+            .questionUserId(request.getQuestionUserId()) // 질문 작성자 ID 설정
+            .build();
+
         this.itemQuestionRepository.save(itemQuestion);
     }
 
 
-    public void deleteQna(Long questionId)
-    {
+    public void deleteQna(Long questionId) {
         ItemQuestion itemQuestion = this.findItemQuestionById(questionId);
-        if (itemQuestion!=null) {
+        if (itemQuestion != null) {
             this.itemQuestionRepository.delete(itemQuestion);
         }
     }
 
 
+    public void postComment(CommentRequest request, Long questionId) {
 
+        QnaComment comment = QnaComment.builder().questionId(this.findItemQuestionById(questionId))
+            .comment(request.getComment()).build();
 
-
-    public void postComment(CommentRequest request, Long questionId){
-
-        QnaComment comment = new QnaComment();
-        comment.setQuestionId(this.findItemQuestionById(questionId));
-        comment.setComment(request.getComment());
         this.qnaCommentRepository.save(comment);
     }
+
 
     public boolean deleteComment(Long commentId) {
         QnaComment qnaComment = this.findCommentById(commentId);
@@ -261,10 +293,9 @@ public class ItemService {
         return null;
     }
 
-    private ItemQuestion findItemQuestionById(long questionId){
-        Optional<ItemQuestion> OitemQuestion= itemQuestionRepository.findById(questionId);
-        if(OitemQuestion.isPresent())
-        {
+    private ItemQuestion findItemQuestionById(long questionId) {
+        Optional<ItemQuestion> OitemQuestion = itemQuestionRepository.findById(questionId);
+        if (OitemQuestion.isPresent()) {
             return OitemQuestion.get();
         }
         return null;
@@ -276,40 +307,41 @@ public class ItemService {
     }
 
     public ItemDetailRequestDto getItemDetail(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("Item not found"));
 
-        AuctionProgressItem progressItem = auctionProgressItemRepository.findByItemItemId(itemId)
-                .orElse(null);
+        AuctionProgressItem progressItem = auctionProgressItemRepository.findByItemItemId(itemId).orElse(null);
 
         AuctionCompleteItem completeItem = null;
         if (progressItem == null) {
-            completeItem = auctionCompleteItemRepository.findByItemItemId(itemId)
-                    .orElseThrow(() -> new RuntimeException("AuctionProgressItem or AuctionCompleteItem not found for itemId: " + itemId));
+            completeItem = auctionCompleteItemRepository.findByItemItemId(itemId).orElseThrow(
+                () -> new RuntimeException(
+                    "AuctionProgressItem or AuctionCompleteItem not found for itemId: " + itemId));
         }
 
         ItemDetail itemDetail = itemDetailRepository.findByItemId(itemId)
-                .orElseThrow(() -> new RuntimeException("ItemDetail not found for itemId: " + itemId));
+            .orElseThrow(() -> new RuntimeException("ItemDetail not found for itemId: " + itemId));
 
-        List<ItemQuestion> itemQuestions = itemQuestionRepository.findByItemDetailId_ItemDetailId(itemDetail.getItemDetailId());
+        List<ItemQuestion> itemQuestions = itemQuestionRepository.findByItemDetailId_ItemDetailId(
+            itemDetail.getItemDetailId());
 
         return toDTO(item, progressItem, completeItem, itemDetail, itemQuestions);
     }
 
     // DTO 생성 메서드
-    private ItemDetailRequestDto toDTO(Item item, AuctionProgressItem progressItem, AuctionCompleteItem completeItem, ItemDetail itemDetail, List<ItemQuestion> itemQuestions) {
+    private ItemDetailRequestDto toDTO(Item item, AuctionProgressItem progressItem, AuctionCompleteItem completeItem,
+        ItemDetail itemDetail, List<ItemQuestion> itemQuestions) {
         ItemDetailRequestDto dto = new ItemDetailRequestDto();
         dto.setItemId(item.getItemId());
         dto.setTitle(progressItem != null ? progressItem.getItemTitle() : completeItem.getItemTitle());
         dto.setBidFinishTime(progressItem != null ? progressItem.getBidFinishTime() : completeItem.getBidFinishTime());
         dto.setStartPrice(progressItem != null ? progressItem.getStartPrice() : completeItem.getStartPrice());
-        dto.setMaxPrice((progressItem != null && progressItem.getMaxPersonNickName() == null) ? 0 :
-                ((progressItem != null) ? progressItem.getMaxPrice() :
-                        ((completeItem.getMaxPersonNickName() == null) ? 0 : completeItem.getMaxPrice())));
+        dto.setMaxPrice((progressItem != null && progressItem.getMaxPersonNickName() == null) ? 0
+            : ((progressItem != null) ? progressItem.getMaxPrice()
+                : ((completeItem.getMaxPersonNickName() == null) ? 0 : completeItem.getMaxPrice())));
 
         // Optional을 사용하여 null 체크 및 값 설정
-        Integer buyNowPrice = Optional.ofNullable(progressItem != null ? progressItem.getBuyNowPrice() : completeItem != null ? completeItem.getBuyNowPrice() : null)
-                .orElse(null);
+        Integer buyNowPrice = Optional.ofNullable(progressItem != null ? progressItem.getBuyNowPrice()
+            : completeItem != null ? completeItem.getBuyNowPrice() : null).orElse(null);
         dto.setBuyNowPrice(buyNowPrice);
 
         dto.setAuctionComplete(item.isAuctionComplete());
@@ -352,19 +384,14 @@ public class ItemService {
 
         // 아이템 아이디를 키로 하는 맵을 생성
         Map<Long, AuctionProgressItem> itemMap = auctionItems.stream()
-                .collect(Collectors.toMap(item -> item.getItem().getItemId(), item -> item));
+            .collect(Collectors.toMap(item -> item.getItem().getItemId(), item -> item));
 
         // 원래의 순서를 유지하면서 DTO 리스트 생성
-        List<RecommendDto> recommendDtos = itemIds.stream()
-                .map(itemId -> {
-                    AuctionProgressItem item = itemMap.get(itemId);
-                    return new RecommendDto(
-                            item.getItem().getItemId(),
-                            item.getItemTitle(),
-                            item.getThumbnail(),
-                            item.getMaxPrice());
-                })
-                .collect(Collectors.toList());
+        List<RecommendDto> recommendDtos = itemIds.stream().map(itemId -> {
+            AuctionProgressItem item = itemMap.get(itemId);
+            return new RecommendDto(item.getItem().getItemId(), item.getItemTitle(), item.getThumbnail(),
+                item.getMaxPrice());
+        }).collect(Collectors.toList());
 
         // 반환하는 리스트 출력
         System.out.println("Returning DTOs: " + recommendDtos);
