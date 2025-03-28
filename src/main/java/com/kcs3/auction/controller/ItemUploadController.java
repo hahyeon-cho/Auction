@@ -103,8 +103,7 @@ public class ItemUploadController {
         @RequestPart("data") ItemRegisterRequestDto requestDto,
         @RequestPart("images") List<MultipartFile> images
     ) {
-        itemService.postItem(requestDto, images);
-
+        itemService.registerAuctionItem(requestDto, images);
         return ResponseDto.ok("물품 등록을 성공하였습니다.");
     }
 

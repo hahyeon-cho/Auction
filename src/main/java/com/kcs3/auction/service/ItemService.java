@@ -58,6 +58,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -154,46 +155,25 @@ public class ItemService {
     }
 
 
+    // 물품 등록 서비스
+    @Transactional
+    public void registerAuctionItem(ItemRegisterRequestDto requestDto, List<MultipartFile> images) {
 
+        User user = authUserProvider.getCurrentUser();
 
+        Category category = categoryRepository.findByCategory(requestDto.getCategory())
+            .orElseThrow(() -> new CommonException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        TradingMethod tradingMethod = tradingMethodRepository.findByTradingMethod(requestDto.getTradingMethod())
+            .orElseThrow(() -> new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND));
 
+        Region region = regionRepository.findByRegion(requestDto.getRegion())
+            .orElseGet(() -> regionRepository.findByRegion("기타").get());
 
-    //물품저장 서비스
-    public void postItem(AuctionItemRequest request) throws IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-        User user = userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-
-        Region region = regionRepository.findByRegion(request.region);
-        if (region == null) {
-            region = regionRepository.findByRegion("기타");
-        }
-
-        Item item = new Item();
-        item.setCategory(request.category);
-        item.setTradingMethod(request.trading_method);
-        item.setAuctionComplete(false);
-        item.setSeller(user);
-        item.setRegion(region);
-
-        AuctionProgressItem auctionProgressItem = new AuctionProgressItem();
-        auctionProgressItem.setItemTitle(request.title);
-        auctionProgressItem.setBidFinishTime(request.finish_time);
-        auctionProgressItem.setStartPrice(request.start_price);
-
-        // Null 체크 후 설정
-        if (request.buy_now_price != null) {
-            auctionProgressItem.setBuyNowPrice(request.buy_now_price);
-        } else {
-            auctionProgressItem.setBuyNowPrice(null); // null 값 설정
-        }
-
-        auctionProgressItem.setLocation("전체");
-        auctionProgressItem.setItem(item);
-        auctionProgressItem.setMaxPrice(request.start_price);
+        // 상세 정보 생성
+        ItemDetail itemDetail = ItemDetail.builder()
+            .itemDetailContent(requestDto.getContents())
+            .build();
 
         // 이미지 업로드 및 연결
         List<String> imageUrls;
@@ -212,21 +192,37 @@ public class ItemService {
             itemDetail.addImage(itemImage);
         }
 
-        itemDetail.setImages(itemImages);
+        // 물품 생성
+        Item item = Item.builder()
+            .seller(user)
+            .category(category)
+            .tradingMethod(tradingMethod)
+            .region(region)
+            .itemDetail(itemDetail)
+            .build();
 
+        // 경매 진행 중 정보 생성
+        AuctionProgressItem auctionProgressItem = AuctionProgressItem.builder()
+            .item(item)
+            .thumbnail(imageUrls.get(0))
+            .itemTitle(requestDto.getTitle())
+            .bidFinishTime(requestDto.getFinishTime())
+            .location(region.getRegion())
+            .buyNowPrice(requestDto.getBuyNowPrice())
+            .startPrice(requestDto.getStartPrice())
+            .maxPrice(requestDto.getStartPrice())
+            .build();
+
+        // 저장
         itemRepository.save(item);
         auctionProgressItemRepository.save(auctionProgressItem);
-        itemDetailRepository.save(itemDetail);
-        for (ItemImage itemImage : itemImages) {
-            itemImageRepository.save(itemImage);
-        }
 
-        //엘라스틱 저장 로직
+        // 엘라스틱 서치 저장
         itemElasticsearchRepository.save(ItemDocument.builder()
-                .itemTitle(auctionProgressItem.getItemTitle())
-                .itemId(item.getItemId())
-                .createAt(item.getCreatedAt())
-                .build());
+            .itemTitle(auctionProgressItem.getItemTitle())
+            .itemId(item.getItemId())
+            .createAt(item.getCreatedAt())
+            .build());
     }
 
     // 임베딩 값 저장 서비스 메서드 수정
