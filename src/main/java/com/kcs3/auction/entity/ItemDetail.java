@@ -1,14 +1,24 @@
 package com.kcs3.auction.entity;
 
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
-
-import java.util.List;
 
 @Entity
 @Table(name = "ItemDetail")
@@ -22,7 +32,7 @@ public class ItemDetail extends BaseEntity {
     @Column(name = "itemDetailId", nullable = false)
     private Long itemDetailId;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "itemId", nullable = false)
     private Item item;
 
@@ -38,12 +48,12 @@ public class ItemDetail extends BaseEntity {
         this.itemDetailContent = itemDetailContent;
     }
 
+    public void setItem(Item item) { this.item = item; }
+
     @Override
     public String toString() {
-        return "ItemDetail{" +
-                "id=" + getItemDetailId() +  // BaseEntity에서 상속받은 ID
-                ", content='" + itemDetailContent + '\'' +
-                ", item=" + (item != null ? "Item[id=" + item.getItemId() + "]" : "null") +
-                '}';
+        return "ItemDetail {" + "id=" + getItemDetailId() +  // BaseEntity에서 상속받은 ID
+            ", content='" + itemDetailContent + '\'' + ", item=" + (item != null ? "Item[id=" + item.getItemId() + "]"
+            : "null") + '}';
     }
 }
