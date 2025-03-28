@@ -195,23 +195,21 @@ public class ItemService {
         auctionProgressItem.setItem(item);
         auctionProgressItem.setMaxPrice(request.start_price);
 
-        ArrayList<String> imageUrls = this.saveFiles(request.images);
-        if (!imageUrls.isEmpty()) {
-            auctionProgressItem.setThumbnail(imageUrls.get(0));
-        } else {
-            throw new IOException("이미지가 제공되지 않았습니다.");
+        // 이미지 업로드 및 연결
+        List<String> imageUrls;
+        try {
+            imageUrls = uploadImagesAndGetUrls(images);
+        } catch (IOException e) {
+            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        ItemDetail itemDetail = new ItemDetail();
-        itemDetail.setItem(item);
-        itemDetail.setItemDetailContent(request.contents);
-
-        List<ItemImage> itemImages = new ArrayList<>();
         for (String url : imageUrls) {
-            ItemImage itemImage = new ItemImage();
-            itemImage.setUrl(url);
-            itemImage.setItemDetail(itemDetail);
-            itemImages.add(itemImage);
+            ItemImage itemImage = ItemImage.builder()
+                .itemDetail(itemDetail)
+                .url(url)
+                .build();
+
+            itemDetail.addImage(itemImage);
         }
 
         itemDetail.setImages(itemImages);

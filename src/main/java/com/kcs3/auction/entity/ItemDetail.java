@@ -39,16 +39,18 @@ public class ItemDetail extends BaseEntity {
     @Column(nullable = false)
     private String itemDetailContent;
 
-    @OneToMany(mappedBy = "itemDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "itemDetail", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemImage> images;
 
     @Builder
-    public ItemDetail(Item item, String itemDetailContent) {
-        this.item = item;
+    public ItemDetail(String itemDetailContent) {
         this.itemDetailContent = itemDetailContent;
+        this.images = new ArrayList<>();
     }
 
     public void setItem(Item item) { this.item = item; }
+
+    public void addImage(ItemImage img) { images.add(img); }
 
     @Override
     public String toString() {
