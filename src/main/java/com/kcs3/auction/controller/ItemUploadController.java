@@ -1,28 +1,19 @@
 package com.kcs3.auction.controller;
 
-import com.kcs3.auction.dto.*;
-import com.kcs3.auction.entity.Category;
-import com.kcs3.auction.entity.TradingMethod;
-import com.kcs3.auction.service.ItemService;
-import com.kcs3.auction.service.LikeService;
+import com.kcs3.auction.dto.CommentRequest;
+import com.kcs3.auction.dto.ItemRegisterRequestDto;
 import com.kcs3.auction.dto.LikeRequest;
+import com.kcs3.auction.dto.QnaPostRequest;
 import com.kcs3.auction.dto.ResponseDto;
-import com.kcs3.auction.dto.SaveEmbeddingRequest;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
 import com.kcs3.auction.service.ItemService;
 import com.kcs3.auction.service.LikeService;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,30 +24,18 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth/auction")
 public class ItemUploadController {
-    @Autowired
+
     private final ItemService itemService;
-    @Autowired
     private final LikeService likeService;
     
     @GetMapping("/alarm")
     public ResponseDto<List<String>> getAlarm(){
         return ResponseDto.ok(itemService.getAlarm());
-    }
-    private WebClient webClient;
-
-    @Value("${flask.url}")
-    private String flaskUrl;
-
-
-    @PostConstruct
-    private void initWebClient() {
-        this.webClient = WebClient.create(flaskUrl);
     }
 
 
@@ -107,18 +86,6 @@ public class ItemUploadController {
         return ResponseDto.ok("물품 등록을 성공하였습니다.");
     }
 
-    //임베딩 저장
-    @PostMapping("/embedding")
-    public ResponseEntity<NormalResponse> saveEmbedding(@RequestBody SaveEmbeddingRequest saveEmbeddingRequest) {
-        try {
-            Long itemId = itemService.getLastItemId();
-            itemService.updateEmbedding(itemId, saveEmbeddingRequest.getEmbedding(), saveEmbeddingRequest.getThEmbedding(), saveEmbeddingRequest.getCategoryEmbedding(), saveEmbeddingRequest.getDetailEmbedding());
-
-            // 파이썬 서버로 요청 보내기
-            Mono<ResponseEntity<String>> response = webClient.get()
-                    .uri("/api/MakeRepresentEmbedding")
-                    .retrieve()
-                    .toEntity(String.class);
 
             ResponseEntity<String> result = response.block();
             if (result != null && result.getStatusCode().is2xxSuccessful()) {
