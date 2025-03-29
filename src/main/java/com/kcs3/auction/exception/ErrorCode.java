@@ -58,7 +58,10 @@ public enum ErrorCode {
 
     // 500 - Internal Server Error
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러입니다."),
-    FILE_UPLOAD_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패하였습니다.");
+    FILE_UPLOAD_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패하였습니다."),
+    EMBEDDING_SAVE_FAILED(50002, HttpStatus.INTERNAL_SERVER_ERROR, "임베딩 값을 저장하는 중 오류가 발생하였습니다."),
+    EMBEDDING_API_FAILED(50003, HttpStatus.INTERNAL_SERVER_ERROR, "대표 임베딩을 생성하는 외부 API 호출 중 오류가 발생하였습니다."),
+    RECOMMENDATION_FAIL(50004, HttpStatus.INTERNAL_SERVER_ERROR, "추천 서버 통신에 실패했습니다.");
 
     private final Integer code;
     private final HttpStatus httpStatus;
