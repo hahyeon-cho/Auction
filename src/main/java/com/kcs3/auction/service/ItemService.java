@@ -5,12 +5,9 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcs3.auction.document.ItemDocument;
 import com.kcs3.auction.dto.CommentRequest;
 import com.kcs3.auction.dto.ItemDetailRequestDto;
-import com.kcs3.auction.dto.ItemEmbeddingRequestDto;
-import com.kcs3.auction.dto.ItemEmbeddingResponseDto;
 import com.kcs3.auction.dto.ItemRegisterRequestDto;
 import com.kcs3.auction.dto.QnaPostRequest;
 import com.kcs3.auction.dto.RecommendDto;
@@ -23,7 +20,6 @@ import com.kcs3.auction.entity.ItemDetail;
 import com.kcs3.auction.entity.ItemImage;
 import com.kcs3.auction.entity.ItemQuestion;
 import com.kcs3.auction.entity.QnaComment;
-import com.kcs3.auction.entity.Recommend;
 import com.kcs3.auction.entity.Region;
 import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.entity.User;
@@ -35,11 +31,9 @@ import com.kcs3.auction.repository.AuctionProgressItemRepository;
 import com.kcs3.auction.repository.CategoryRepository;
 import com.kcs3.auction.repository.ItemDetailRepository;
 import com.kcs3.auction.repository.ItemElasticsearchRepository;
-import com.kcs3.auction.repository.ItemImageRepository;
 import com.kcs3.auction.repository.ItemQuestionRepository;
 import com.kcs3.auction.repository.ItemRepository;
 import com.kcs3.auction.repository.QnaCommentRepository;
-import com.kcs3.auction.repository.RecommendRepository;
 import com.kcs3.auction.repository.RegionRepository;
 import com.kcs3.auction.repository.TradingMethodRepository;
 import com.kcs3.auction.repository.UserRepository;
@@ -52,27 +46,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class ItemService {
-
-    @Value("${EMBEDDING_SERVER_URL}")
-    private String embeddingServerUrl;
 
     private final AuthUserProvider authUserProvider;
 
     private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_NORTHEAST_2) // 서울 리전
         .build();
+
+    private final RecommendationService itemRecommendationService;
 
     private final UserRepository userRepository;
 
@@ -89,7 +81,8 @@ public class ItemService {
     private final AlarmRepository alarmRepository;
 
     private final ItemElasticsearchRepository itemElasticsearchRepository;
-    private final ObjectMapper objectMapper;
+
+
     @Value("${cloud.aws.s3.bucketName}")
     private String bucket;
 
@@ -97,11 +90,10 @@ public class ItemService {
     private final TradingMethodRepository tradingMethodRepository;
     private final RegionRepository regionRepository;
 
-    private ItemImageRepository itemImageRepository;
 
-    private RecommendRepository recommendRepository;
 
-    private final WebClient webClient;
+
+
 
 
     public List<String> getAlarm() {
@@ -219,48 +211,25 @@ public class ItemService {
 
         // 엘라스틱 서치 저장
         itemElasticsearchRepository.save(ItemDocument.builder()
-            .itemTitle(auctionProgressItem.getItemTitle())
+            .itemTitle(requestDto.getTitle())
             .itemId(item.getItemId())
             .createAt(item.getCreatedAt())
             .build());
-    }
 
-    // 임베딩 값 저장 서비스 메서드 수정
-    public Long getLastItemId() {
-        return itemRepository.findTopByOrderByItemIdDesc().getItemId();
-    }
-
-    public void updateEmbedding(Long itemId, double[] embedding, double[] thEmbedding, double[] categoryEmbedding, double[] detailEmbedding) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid item ID: " + itemId));
         try {
-            String embeddingJson = objectMapper.writeValueAsString(embedding);
-            String thEmbeddingJson = objectMapper.writeValueAsString(thEmbedding);
-            String categoryEmbeddingJson = objectMapper.writeValueAsString(categoryEmbedding);
-            String detailEmbeddingJson = objectMapper.writeValueAsString(detailEmbedding);
-
-            Recommend recommend = recommendRepository.findByItemId(itemId);
-            if (recommend == null) {
-                recommend = new Recommend();
-                recommend.setItemId(itemId);
-                recommend.setEmbedding(embeddingJson);
-                recommend.setThEmbedding(thEmbeddingJson);
-                recommend.setCategoryEmbedding(categoryEmbeddingJson);
-                recommend.setDetailEmbedding(detailEmbeddingJson);
-                recommendRepository.save(recommend);
-            } else {
-                recommend.setEmbedding(embeddingJson);
-                recommend.setThEmbedding(thEmbeddingJson);
-                recommend.setCategoryEmbedding(categoryEmbeddingJson);
-                recommend.setDetailEmbedding(detailEmbeddingJson);
-                recommendRepository.save(recommend);
-            }
-
+            itemRecommendationService.createEmbeddingAfterItemRegister(
+                item.getItemId(),
+                requestDto.getTitle(),
+                imageUrls.get(0),
+                region.getRegion(),
+                requestDto.getContents()
+            );
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize embedding", e);
+            throw new CommonException(ErrorCode.EMBEDDING_API_FAILED);
+        } catch (CommonException e) {
+            log.warn("임베딩 저장 실패: {}", e.getMessage());
         }
     }
-
 
     // S3Client에 이미지 저장 후 url 리스트 반환
     private ArrayList<String> uploadImagesAndGetUrls(List<MultipartFile> images) throws IOException {

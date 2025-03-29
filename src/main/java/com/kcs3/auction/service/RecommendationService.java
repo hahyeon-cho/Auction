@@ -31,7 +31,7 @@ public class RecommendationService {
     // 물품 임베딩 값 저장
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void saveEmbeddingAfterItemRegister(
+    public void createEmbeddingAfterItemRegister(
         Long itemId,
         String title,
         String thumbnailUrl,
