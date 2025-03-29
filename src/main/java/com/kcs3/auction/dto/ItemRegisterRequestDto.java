@@ -24,10 +24,10 @@ public class ItemRegisterRequestDto {
     private String contents;
 
     @NotNull
-    private Category category;
+    private String category;
 
     @NotNull
-    private TradingMethod tradingMethod;
+    private Integer tradingMethod;
 
     @NotBlank
     private String region;
@@ -45,7 +45,7 @@ public class ItemRegisterRequestDto {
     @Builder
     public ItemRegisterRequestDto(
         String title, String contents,
-        Category category, TradingMethod tradingMethod,
+        String category, Integer tradingMethod,
         String region,
         Integer startPrice, Integer buyNowPrice,
         LocalDateTime finishTime

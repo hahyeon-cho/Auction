@@ -217,7 +217,7 @@ public class ItemService {
             .build());
 
         try {
-            itemRecommendationService.createEmbeddingAfterItemRegister(
+            itemRecommendationService.storeEmbeddingAfterItemRegister(
                 item.getItemId(),
                 requestDto.getTitle(),
                 imageUrls.get(0),
