@@ -6,169 +6,100 @@ import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.entity.Item;
 import com.kcs3.auction.entity.LikeItem;
 import com.kcs3.auction.entity.User;
-import com.kcs3.auction.exception.CommonException;
-import com.kcs3.auction.exception.ErrorCode;
-import com.kcs3.auction.repository.MyAuctionCompleteRepository;
-import com.kcs3.auction.repository.MyAuctionProgressRepository;
-import com.kcs3.auction.repository.MyAuctionSellRepository;
-import com.kcs3.auction.repository.MyAuctionlistRepository;
-import com.kcs3.auction.repository.MyCompleteItemRepository;
-import com.kcs3.auction.repository.MypageLikeRepository;
-import com.kcs3.auction.repository.UserRepository;
-import com.kcs3.auction.utils.CustomOAuth2User;
+import com.kcs3.auction.repository.AuctionCompleteItemRepository;
+import com.kcs3.auction.repository.AuctionInfoRepository;
+import com.kcs3.auction.repository.AuctionProgressItemRepository;
+import com.kcs3.auction.repository.ItemRepository;
+import com.kcs3.auction.repository.LikeItemRepository;
+import com.kcs3.auction.utils.AuthUserProvider;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 @Service
-@Log4j2
+@RequiredArgsConstructor
 public class MypageService {
-    @Autowired
-    private MypageLikeRepository mypageLikeRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private MyAuctionProgressRepository myAuctionProgressRepository;
-    @Autowired
-    private MyAuctionCompleteRepository myAuctionCompleteRepository;
-    @Autowired
-    private MyAuctionSellRepository myAuctionSellRepository;
-    @Autowired
-    private MyAuctionlistRepository myAuctionlistRepository;
-    @Autowired
-    private MyCompleteItemRepository myCompleteItemRepository;
 
-    public List<MypageListDto> getLikedItemByUserId(Pageable pageable) {
+    private final AuthUserProvider authUserProvider;
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+    private final LikeItemRepository likeItemRepository;
+    private final ItemRepository itemRepository;
+    private final AuctionInfoRepository auctionInfoRepository;
+    private final AuctionProgressItemRepository auctionProgressRepository;
+    private final AuctionCompleteItemRepository auctionCompleteRepository;
 
-
-        User user =  userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-        Slice<LikeItem> likedItems = mypageLikeRepository.findByUser(user,pageable);
-
-
-        List<MypageListDto> likedItem = new ArrayList<>();
+    public Slice<MypageListDto> loadLikedItems(Pageable pageable) {
+        User user = authUserProvider.getCurrentUser();
+        Slice<LikeItem> likedItems = likeItemRepository.findByUser(user, pageable);
+        List<MypageListDto> result = new ArrayList<>();
 
         for (LikeItem likeItem : likedItems) {
             Item item = likeItem.getItem();
-            if (item != null & item.isAuctionComplete() == false) {
-                //ProgressItem
-                AuctionProgressItem progressItem = myAuctionProgressRepository.findAuctionProgressItemByItem(item);
-                likedItem.add(MypageListDto.fromProgressEntity(item, progressItem));
-
-            } else if (item != null & item.isAuctionComplete() == true) {
-                //CompleteItem
-                AuctionCompleteItem completeItem = myAuctionCompleteRepository.findCompleteItemByItem(item);
-                likedItem.add(MypageListDto.fromCompleteEntity(item, completeItem));
-
+            if (item != null && !item.isAuctionComplete()) {
+                AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
+                    item);
+                result.add(MypageListDto.fromProgressEntity(item, progressItem));
+            } else if (item != null) {
+                AuctionCompleteItem completeItem = auctionCompleteRepository.findCompleteItemByItem(
+                    item);
+                result.add(MypageListDto.fromCompleteEntity(item, completeItem));
             }
-
-
         }
 
-        return likedItem;
+        return new SliceImpl<>(result, pageable, likedItems.hasNext());
     }
 
-    public boolean getIsLikedItem(Long itemId){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-        User user =  userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-
-        Item item = myAuctionSellRepository.findByItemId(itemId)
-                .orElseThrow(() -> new CommonException(ErrorCode.ITEM_NOT_FOUND));
-
-        if(mypageLikeRepository.findByUserAndItem(user,item).isPresent()){
-            return true;
-        }
-
-        return false;
-
-    }
-
-    //경매 등록한 아이템 조회
-    public List<MypageListDto> getMyAuctionByUserId(Pageable pageable) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-        User user =  userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-        //사용자가 등록한 아이템 조회
-        Slice<Item> userItems = myAuctionSellRepository.findBySeller(user, pageable);
-
-        //입찰 &낙찰 아이템 조회
-        List<MypageListDto> auctionItems = new ArrayList<>();
+    public Slice<MypageListDto> loadRegisteredItems(Pageable pageable) {
+        User user = authUserProvider.getCurrentUser();
+        Slice<Item> userItems = itemRepository.findBySeller(user, pageable);
+        List<MypageListDto> result = new ArrayList<>();
 
         for (Item item : userItems) {
-            if (item != null & item.isAuctionComplete() == false) {
-                AuctionProgressItem progressItem = myAuctionProgressRepository.findAuctionProgressItemByItem(item);
-                auctionItems.add(MypageListDto.fromProgressEntity(item, progressItem));
-            } else if (item != null & item.isAuctionComplete() == true) {
-                AuctionCompleteItem completeItem = myAuctionCompleteRepository.findCompleteItemByItem(item);
-                auctionItems.add(MypageListDto.fromCompleteEntity(item, completeItem));
+            if (item != null && !item.isAuctionComplete()) {
+                AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
+                    item);
+                result.add(MypageListDto.fromProgressEntity(item, progressItem));
+            } else if (item != null) {
+                AuctionCompleteItem completeItem = auctionCompleteRepository.findCompleteItemByItem(
+                    item);
+                result.add(MypageListDto.fromCompleteEntity(item, completeItem));
             }
         }
 
-        return auctionItems;
+        return new SliceImpl<>(result, pageable, userItems.hasNext());
     }
 
+    public Slice<MypageListDto> loadBidItems(Pageable pageable) {
+        User user = authUserProvider.getCurrentUser();
+        Slice<Item> items = auctionInfoRepository.findByUser(user, pageable);
+        List<MypageListDto> result = new ArrayList<>();
 
-//입찰 참여 조회 (현재 입찰중인 건만 조회)
-    public List<MypageListDto> getMyBidByUserId(Pageable pageable){
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-
-        User user =  userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-
-        Slice<Item> Item = myAuctionlistRepository.findByUser(user,pageable);
-
-        List<MypageListDto> getMyBids = new ArrayList<>();
-        for(Item item: Item){
-            AuctionProgressItem progressItem = myAuctionProgressRepository.findAuctionProgressItemByItem(item);
-
-            if(progressItem !=null)
-                getMyBids.add(MypageListDto.fromEntity(progressItem));
-
+        for (Item item : items) {
+            AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
+                item);
+            if (progressItem != null) {
+                result.add(MypageListDto.fromEntity(progressItem));
+            }
         }
-        //현재 입찰 진행중인것만 조회 하도록 기능 설정
-        return getMyBids;
+
+        return new SliceImpl<>(result, pageable, items.hasNext());
     }
 
+    // 유저가 낙찰받은 상품 리스트 반환
+    public Slice<MypageListDto> loadAwardedItems(Pageable pageable) {
+        User user = authUserProvider.getCurrentUser();
+        Slice<AuctionCompleteItem> completeItems = auctionCompleteRepository.findByUser(user,
+            pageable);
+        List<MypageListDto> result = new ArrayList<>();
 
-//낙찰 참여 조회
-    public List<MypageListDto> getMyCompleteByUserId(Pageable pageable) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-
-        User user =  userRepository.findByUserId(customOAuth2User.getUserId())
-                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
-
-        Slice<AuctionCompleteItem> completeItem = myCompleteItemRepository.findByUser(user,pageable);
-        List<MypageListDto> completeItems = new ArrayList<>();
-
-        for(AuctionCompleteItem item : completeItem){
-            completeItems.add(MypageListDto.fromEntity(item));
+        for (AuctionCompleteItem item : completeItems) {
+            result.add(MypageListDto.fromEntity(item));
         }
-        return completeItems;
+
+        return new SliceImpl<>(result, pageable, completeItems.hasNext());
     }
-
-
-
 }
-
-
-
-

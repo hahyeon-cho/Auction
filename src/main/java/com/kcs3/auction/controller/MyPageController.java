@@ -3,74 +3,57 @@ package com.kcs3.auction.controller;
 import com.kcs3.auction.dto.MypageListDto;
 import com.kcs3.auction.dto.ResponseDto;
 import com.kcs3.auction.service.MypageService;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 마이페이지 관련 API 컨트롤러 인증된 사용자의 마이페이지 정보를 조회하는 기능을 제공합니다.
+ * <pre>
+ * endpoints:
+ * - GET /like    : 사용자가 좋아요한 물품 목록 조회
+ * - GET /auction : 사용자가 등록한 경매 물품 목록 조회
+ * - GET /bid     : 사용자가 입찰에 참여한 목록 조회
+ * - GET /award   : 사용자가 낙찰받은 물품 목록 조회
+ * </pre>
+ */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/auth/mypage")
 public class MyPageController {
-    @Autowired
-    private MypageService mypageService;
 
-    //User Id 추출
-/*
-    @GetMapping
-    public Long getUserIdFromToken() {
-        // 현재 사용자의 인증 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private final MypageService mypageService;
 
-        // 사용자 아이디 추출
-        Long userId = Long.valueOf(authentication.getName());
-
-        // 사용자 아이디를 이용하여 마이페이지 정보 조회
-       return userId;
-    }
-*/
-
-
-    //좋아요 페이지
+    // 사용자가 좋아요한 물품 목록 조회
     @GetMapping("/like")
-    public List<MypageListDto> getMyLike(@PageableDefault(size =10)Pageable pageable){
-
-        return mypageService.getLikedItemByUserId(pageable);
+    public ResponseDto<Slice<MypageListDto>> getMyLikedItems(
+        @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseDto.ok(mypageService.loadLikedItems(pageable));
     }
 
-
-    @GetMapping("/item-like")
-    public ResponseDto<Boolean> getItemLike(Long itemId){
-        return ResponseDto.ok(mypageService.getIsLikedItem(itemId));
-    }
-
-    //경매 등록 페이지
+    // 사용자가 등록한 경매 물품 목록 조회
     @GetMapping("/auction")
-    public List<MypageListDto> getMyAuction(@PageableDefault(size =10)Pageable pageable){
-
-        return mypageService.getMyAuctionByUserId(pageable);
-
+    public ResponseDto<Slice<MypageListDto>> getMyRegisteredItems(
+        @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseDto.ok(mypageService.loadRegisteredItems(pageable));
     }
 
-    //입찰 참여 페이지
+    // 사용자가 참여한 입찰 목록 조회
     @GetMapping("/bid")
-    public List<MypageListDto> getMyBid(@PageableDefault(size =10)Pageable pageable){
-
-        return mypageService.getMyBidByUserId(pageable);
-
+    public ResponseDto<Slice<MypageListDto>> getMyBidItems(
+        @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseDto.ok(mypageService.loadBidItems(pageable));
     }
 
-    //입찰 완료 페이지
+    // 사용자가 낙찰받은 물품 목록 조회
     @GetMapping("/award")
-    public List<MypageListDto> getMyAward(@PageableDefault(size =10) Pageable pageable){
-
-        return mypageService.getMyCompleteByUserId(pageable);
-
+    public ResponseDto<Slice<MypageListDto>> getMyAwardedItems(
+        @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseDto.ok(mypageService.loadAwardedItems(pageable));
     }
-
-
-
 }
 
