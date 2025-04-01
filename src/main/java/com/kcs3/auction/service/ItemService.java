@@ -38,7 +38,6 @@ import com.kcs3.auction.repository.RegionRepository;
 import com.kcs3.auction.repository.TradingMethodRepository;
 import com.kcs3.auction.repository.UserRepository;
 import com.kcs3.auction.utils.AuthUserProvider;
-import com.kcs3.auction.utils.CustomOAuth2User;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +47,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,7 +75,7 @@ public class ItemService {
     private final AuctionCompleteItemRepository auctionCompleteItemRepository;
 
 
-    private final AlarmRepository alarmRepository;
+
 
     private final ItemElasticsearchRepository itemElasticsearchRepository;
 
@@ -93,21 +90,6 @@ public class ItemService {
 
 
 
-
-
-
-    public List<String> getAlarm() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-        User user = userRepository.findByUserId(customOAuth2User.getUserId())
-            .orElseThrow(() -> new CommonException(ErrorCode.USER_NOT_FOUND));
-
-        List<Alarm> alarms = alarmRepository.findTop4ByUserOrderByCreatedAtDesc(user);
-
-        return alarms.stream().map(Alarm::getAlarmContent).collect(Collectors.toList());
-
-    }
 
     public void postQna(QnaPostRequest request, Long itemId) {
 
