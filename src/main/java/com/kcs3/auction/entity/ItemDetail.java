@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "ItemDetail")
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,33 +28,38 @@ public class ItemDetail extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "itemDetailId", nullable = false)
+    @Column(nullable = false)
     private Long itemDetailId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "itemId", nullable = false)
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
     @Column(nullable = false)
     private String itemDetailContent;
 
     @OneToMany(mappedBy = "itemDetail", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemImage> images;
+    private final List<ItemImage> images = new ArrayList<>();;
+
+    @OneToMany(mappedBy = "itemDetail", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<ItemQna> qnas = new ArrayList<>();;
 
     @Builder
-    public ItemDetail(String itemDetailContent) {
-        this.itemDetailContent = itemDetailContent;
-        this.images = new ArrayList<>();
-    }
+    public ItemDetail(String itemDetailContent) { this.itemDetailContent = itemDetailContent; }
 
+    // Setter
     public void setItem(Item item) { this.item = item; }
 
+    // modifier
     public void addImage(ItemImage img) { images.add(img); }
 
+    public void addQna(ItemQna qna) { qnas.add(qna); }
+
+    // toString
     @Override
     public String toString() {
         return "ItemDetail {" + "id=" + getItemDetailId() +  // BaseEntity에서 상속받은 ID
-            ", content='" + itemDetailContent + '\'' + ", item=" + (item != null ? "Item[id=" + item.getItemId() + "]"
-            : "null") + '}';
+            ", content='" + itemDetailContent + '\'' +
+            ", item=" + (item != null ? "Item[id=" + item.getItemId() + "]" : "null") + '}';
     }
 }

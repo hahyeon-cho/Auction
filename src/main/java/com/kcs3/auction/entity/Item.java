@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "Item")
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,30 +28,33 @@ public class Item extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "itemId", nullable = false)
+    @Column(nullable = false)
     private Long itemId;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
-    private List<LikeItem> likeItems;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sellerId")
+    @JoinColumn(name = "seller_id")
     private User seller;
 
     @ManyToOne
-    @JoinColumn(name = "categoryId", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "tradingMethodId", nullable = false)
+    @JoinColumn(name = "trading_method_id", nullable = false)
     private TradingMethod tradingMethod;
 
     @ManyToOne
-    @JoinColumn(name = "regionId", nullable = false)
+    @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
     @OneToOne(mappedBy = "item", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private ItemDetail itemDetail;
+
+    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<ItemLike> itemLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
+    private final List<AuctionInfo> auctionInfos = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean isAuctionComplete;
@@ -73,12 +75,18 @@ public class Item extends BaseEntity {
         this.isAuctionComplete = false;
     }
 
+    // Setter
     public void setItemDetail(ItemDetail itemDetail) {
         this.itemDetail = itemDetail;
         if (itemDetail.getItem() != this) {
             itemDetail.setItem(this);
         }
     }
+
+    // modifier
+    public void addLike(ItemLike itemLike) { this.itemLikes.add(itemLike); }
+
+    public void addAuctionInfo(AuctionInfo auctionInfo) { this.auctionInfos.add(auctionInfo); }
 
     public void endAuction() {
         this.isAuctionComplete = true;

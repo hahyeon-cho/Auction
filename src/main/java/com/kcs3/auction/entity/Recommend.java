@@ -1,11 +1,20 @@
 package com.kcs3.auction.entity;
 
 import com.kcs3.auction.model.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Recommend")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = true)
@@ -13,42 +22,47 @@ public class Recommend extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "recommendId", nullable = false)
+    @Column(nullable = false)
     private Long recommendId;
 
-    @Column(columnDefinition = "TEXT")
-    private String embedding;
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
     @Column(columnDefinition = "TEXT")
-    private String thEmbedding;
+    private String titleEmbeddingVec;
 
     @Column(columnDefinition = "TEXT")
-    private String categoryEmbedding;
+    private String thumbnailEmbeddingVec;
 
     @Column(columnDefinition = "TEXT")
-    private String detailEmbedding;
+    private String categoryEmbeddingVec;
 
     @Column(columnDefinition = "TEXT")
-    private String representEmbedding;
+    private String detailEmbeddingVec;
 
-    @Column(name = "item_id", nullable = false)
-    private Long itemId;
+    @Column(columnDefinition = "TEXT")
+    private String representEmbeddingVec;
 
     @Builder
     public Recommend(
-            String embedding,
-            String thEmbedding,
-            String categoryEmbedding,
-            String detailEmbedding,
-            String representEmbedding,
-            Long itemId
+        Item item,
+        String titleEmbeddingVec,
+        String thumbnailEmbeddingVec,
+        String categoryEmbeddingVec,
+        String detailEmbeddingVec,
+        String representEmbeddingVec
     ) {
-        this.embedding = embedding;
-        this.thEmbedding = thEmbedding;
-        this.categoryEmbedding = categoryEmbedding;
-        this.detailEmbedding = detailEmbedding;
-        this.representEmbedding = representEmbedding;
-        this.itemId = itemId;
+        this.item = item;
+        this.titleEmbeddingVec = titleEmbeddingVec;
+        this.thumbnailEmbeddingVec = thumbnailEmbeddingVec;
+        this.categoryEmbeddingVec = categoryEmbeddingVec;
+        this.detailEmbeddingVec = detailEmbeddingVec;
+        this.representEmbeddingVec = representEmbeddingVec;
+    }
+
+    // Setter
+    public void setRepresentEmbeddingVec (String representingVecRepresent) {
+        this.representEmbeddingVec = representingVecRepresent;
     }
 }
 

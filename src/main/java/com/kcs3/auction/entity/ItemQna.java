@@ -1,6 +1,7 @@
 package com.kcs3.auction.entity;
 
 import com.kcs3.auction.model.BaseEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,7 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,33 +23,34 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ItemImage extends BaseEntity {
+public class ItemQna extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    private Long itemImage;
+    private Long itemQnanId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_detail_id", nullable = false)
     private ItemDetail itemDetail;
 
     @Column(nullable = false)
-    private String url;
+    private String qnaContent;
+
+    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<ItemQnaComment> comments = new ArrayList<>();;
 
     @Builder
-    public ItemImage(ItemDetail itemDetail, String url) {
+    public ItemQna(User user, ItemDetail itemDetail, String qnaContent) {
+        this.user = user;
         this.itemDetail = itemDetail;
-        this.url = url;
+        this.qnaContent = qnaContent;
     }
 
-    // toString
-    @Override
-    public String toString() {
-        return "ItemImage{" +
-            "id=" + itemImage +  // BaseEntity에서 상속받은 ID
-            ", url='" + url + '\'' +
-            ", itemDetail=" + (itemDetail != null ? "ItemDetail[id=" + itemDetail.getItemDetailId() + "]" : "null") +
-            '}';
-    }
+    // modifier
+    public void addComment(ItemQnaComment comment) { comments.add(comment); }
 }

@@ -21,7 +21,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class BaseEntity {
 
     @CreatedDate
@@ -37,7 +36,5 @@ public class BaseEntity {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-
 }
 
