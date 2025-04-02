@@ -4,6 +4,7 @@ import com.kcs3.auction.utils.CustomSuccessHandler;
 import com.kcs3.auction.utils.JWTFilter;
 import com.kcs3.auction.utils.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,18 +18,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.util.Collections;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
-
     private final JWTUtil jwtUtil;
     private final CustomSuccessHandler customSuccessHandler;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Bean
     public SecurityFilterChain filterChain(@NonNull HttpSecurity http) throws Exception {
@@ -62,16 +61,9 @@ public class SecurityConfig {
         http.addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         // 경로별 인가 설정
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                        "/api/v1/no-auth/**",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/ws/**",
-                        "/actuator/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-        );
+        http.authorizeHttpRequests(
+            auth -> auth.requestMatchers("/api/v1/no-auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/ws/**",
+                "/actuator/**").permitAll().anyRequest().authenticated());
 
         return http.build();
     }

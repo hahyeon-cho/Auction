@@ -26,20 +26,24 @@ public class WebConfig implements WebMvcConfigurer {
 
     // 문자열 ID를 TradingMethod 엔티티로 변환하는 컨버터
     private class StringToTradingMethodConverter implements Converter<String, TradingMethod> {
+
         @Override
         public TradingMethod convert(@NonNull String source) {
             Long id = Long.parseLong(source);
             return tradingMethodRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid TradingMethod ID: " + source));
+                .orElseThrow(
+                    () -> new IllegalArgumentException("Invalid TradingMethod ID: " + source));
         }
     }
 
     // 문자열 이름을 Category 엔티티로 변환하는 컨버터
     private class StringToCategoryConverter implements Converter<String, Category> {
+
         @Override
         public Category convert(@NonNull String source) {
-            return categoryRepository.findByName(source)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid category name: " + source));
+            return categoryRepository.findByCategory(source)
+                .orElseThrow(
+                    () -> new IllegalArgumentException("Invalid category name: " + source));
         }
     }
 }
