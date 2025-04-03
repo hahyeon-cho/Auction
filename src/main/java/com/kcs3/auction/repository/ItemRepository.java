@@ -22,6 +22,57 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT i.seller.userId FROM Item i WHERE i.itemId = :itemId")
     Long findSellerIdByItemId(@Param("itemId") Long itemId);
 
+    // 필터 조건(카테고리, 거래방식, 지역, 경매상태 등)으로 경매 아이템 목록 조회
+    // 경매 상태에 따라 경매 중 테이블/경매 완료 테이블 선택 조인
+    // [TODO] 쿼리 재사용성을 위해 공통 조회 구조 유지 중. 성능이슈 또는 조건 복잡도 증가 시 분리 또는 QueryDSL 리팩토링 고려
+    @Query(value = """
+            SELECT new com.example.dto.ItemPreviewDto(
+                i.id,
+                COALESCE(api.itemTitle, aci.itemTitle),
+                COALESCE(api.thumbnail, aci.thumbnail),
+                c.categoryName,
+                tm.tmCode,
+                COALESCE(api.location, aci.location),
+                COALESCE(api.startPrice, aci.startPrice),
+                COALESCE(api.maxPrice, aci.maxPrice),
+                i.isAuctionComplete,
+                aci.isBidComplete
+            )
+            FROM Item i
+            JOIN i.category c
+            JOIN i.tradeMethod tm
+            LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
+            LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
+            WHERE (:itemIdList IS NULL OR i.id IN :itemIdList)
+              AND (:sellerId IS NULL OR i.seller.id = :sellerId)
+              AND (:categoryId IS NULL OR c.id = :categoryId)
+              AND (:tradingMethodId IS NULL OR tm.id = :tradingMethodId)
+              AND (:region IS NULL OR COALESCE(api.location, aci.location) = :region)
+              AND (:isAuctionComplete IS NULL OR i.isAuctionComplete = :isAuctionComplete)
+        """, countQuery = """
+            SELECT COUNT(i)
+            FROM Item i
+            JOIN i.category c
+            JOIN i.tradeMethod tm
+            LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
+            LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
+            WHERE (:itemIdList IS NULL OR i.id IN :itemIdList)
+              AND (:sellerId IS NULL OR i.seller.id = :sellerId)
+              AND (:categoryId IS NULL OR c.id = :categoryId)
+              AND (:tradingMethodId IS NULL OR tm.id = :tradingMethodId)
+              AND (:region IS NULL OR COALESCE(api.location, aci.location) = :region)
+              AND (:isAuctionComplete IS NULL OR i.isAuctionComplete = :isAuctionComplete)
+        """)
+    Slice<ItemPreviewDto> fetchItemPreviewsByFilters(
+        @Param("itemIdList") List<Long> itemIdList,
+        @Param("sellerId") Long sellerId,
+        @Param("categoryId") Long categoryId,
+        @Param("tradingMethodId") Long tradingMethodId,
+        @Param("region") String region,
+        @Param("isAuctionComplete") Boolean isAuctionComplete,
+        Pageable pageable
+    );
+
     // Redis에 저장할 대상인 물품 ID로 경매 진행 중 물품 조회 (HOT/NEW 용도)
     @Query("SELECT api " +
         "FROM AuctionProgressItem api " +
