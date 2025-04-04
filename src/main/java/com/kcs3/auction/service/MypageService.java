@@ -1,16 +1,11 @@
 package com.kcs3.auction.service;
 
-import com.kcs3.auction.dto.MypageListDto;
-import com.kcs3.auction.entity.AuctionCompleteItem;
-import com.kcs3.auction.entity.AuctionProgressItem;
-import com.kcs3.auction.entity.Item;
-import com.kcs3.auction.entity.LikeItem;
+import com.kcs3.auction.dto.ItemPreviewDto;
 import com.kcs3.auction.entity.User;
 import com.kcs3.auction.repository.AuctionCompleteItemRepository;
 import com.kcs3.auction.repository.AuctionInfoRepository;
-import com.kcs3.auction.repository.AuctionProgressItemRepository;
+import com.kcs3.auction.repository.ItemLikeRepository;
 import com.kcs3.auction.repository.ItemRepository;
-import com.kcs3.auction.repository.LikeItemRepository;
 import com.kcs3.auction.utils.AuthUserProvider;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,80 +21,96 @@ public class MypageService {
 
     private final AuthUserProvider authUserProvider;
 
-    private final LikeItemRepository likeItemRepository;
+    private final ItemLikeRepository itemLikeRepository;
     private final ItemRepository itemRepository;
     private final AuctionInfoRepository auctionInfoRepository;
-    private final AuctionProgressItemRepository auctionProgressRepository;
     private final AuctionCompleteItemRepository auctionCompleteRepository;
 
-    public Slice<MypageListDto> loadLikedItems(Pageable pageable) {
+    public Slice<ItemPreviewDto> getMyLikedItems(Pageable pageable) {
         User user = authUserProvider.getCurrentUser();
-        Slice<LikeItem> likedItems = likeItemRepository.findByUser(user, pageable);
-        List<MypageListDto> result = new ArrayList<>();
+        Slice<Long> itemIdSlice = itemLikeRepository.findItemIdsByUserId(user.getUserId(), pageable);
 
-        for (LikeItem likeItem : likedItems) {
-            Item item = likeItem.getItem();
-            if (item != null && !item.isAuctionComplete()) {
-                AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
-                    item);
-                result.add(MypageListDto.fromProgressEntity(item, progressItem));
-            } else if (item != null) {
-                AuctionCompleteItem completeItem = auctionCompleteRepository.findCompleteItemByItem(
-                    item);
-                result.add(MypageListDto.fromCompleteEntity(item, completeItem));
-            }
+        if (itemIdSlice.isEmpty()) {
+            return new SliceImpl<>(new ArrayList<>(), pageable, false);
         }
 
-        return new SliceImpl<>(result, pageable, likedItems.hasNext());
+        List<Long> itemIdList = itemIdSlice.getContent();
+        List<ItemPreviewDto> itemPreviewList = itemRepository.fetchItemPreviewsByFilters(
+            itemIdList,
+            null,       // sellerId
+            null,       // categoryId
+            null,       // tradingMethodId
+            null,       // region
+            null,       // isAuctionComplete
+            pageable
+        ).getContent();
+
+        return new SliceImpl<>(itemPreviewList, pageable, itemIdSlice.hasNext());
     }
 
-    public Slice<MypageListDto> loadRegisteredItems(Pageable pageable) {
+    public Slice<ItemPreviewDto> getMyRegisteredItems(Pageable pageable) {
         User user = authUserProvider.getCurrentUser();
-        Slice<Item> userItems = itemRepository.findBySeller(user, pageable);
-        List<MypageListDto> result = new ArrayList<>();
 
-        for (Item item : userItems) {
-            if (item != null && !item.isAuctionComplete()) {
-                AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
-                    item);
-                result.add(MypageListDto.fromProgressEntity(item, progressItem));
-            } else if (item != null) {
-                AuctionCompleteItem completeItem = auctionCompleteRepository.findCompleteItemByItem(
-                    item);
-                result.add(MypageListDto.fromCompleteEntity(item, completeItem));
-            }
-        }
+        Slice<ItemPreviewDto> itemPreviewSlice = itemRepository.fetchItemPreviewsByFilters(
+            null,       // itemIds
+            user.getUserId(),
+            null,       // categoryId
+            null,       // tradingMethodId
+            null,       // region
+            null,       // isAuctionComplete
+            pageable
+        );
 
-        return new SliceImpl<>(result, pageable, userItems.hasNext());
+        return itemPreviewSlice;
     }
 
-    public Slice<MypageListDto> loadBidItems(Pageable pageable) {
+    // 사용자가 입찰에 참여한 물품 리스트 반환
+    // 현재 경매중인 물품 + 낙찰한 물품 + 낙찰에 실패한 물품 목록
+    // [Todo] 사용자가 낙찰한 물품은 목록에서 해당 목록에서 안 보이도록 하는 것 고려
+    public Slice<ItemPreviewDto> getMyBidItems(Pageable pageable) {
         User user = authUserProvider.getCurrentUser();
-        Slice<Item> items = auctionInfoRepository.findByUser(user, pageable);
-        List<MypageListDto> result = new ArrayList<>();
+        Slice<Long> itemIdSlice = auctionInfoRepository.findItemIdsByUserId(user.getUserId(), pageable);
 
-        for (Item item : items) {
-            AuctionProgressItem progressItem = auctionProgressRepository.findAuctionProgressItemByItem(
-                item);
-            if (progressItem != null) {
-                result.add(MypageListDto.fromEntity(progressItem));
-            }
+        if (itemIdSlice.isEmpty()) {
+            return new SliceImpl<>(new ArrayList<>(), pageable, false);
         }
 
-        return new SliceImpl<>(result, pageable, items.hasNext());
+        List<Long> itemIdList = itemIdSlice.getContent();
+        List<ItemPreviewDto> itemPreviewList = itemRepository.fetchItemPreviewsByFilters(
+            itemIdList,
+            null,   // sellerId
+            null,       // categoryId
+            null,       // tradingMethodId
+            null,       // region
+            null,       // isAuctionComplete
+            pageable
+        ).getContent();
+
+        return new SliceImpl<>(itemPreviewList, pageable, itemIdSlice.hasNext());
     }
 
-    // 유저가 낙찰받은 상품 리스트 반환
-    public Slice<MypageListDto> loadAwardedItems(Pageable pageable) {
+    // 사용자가 낙찰받은 상품 리스트 반환
+    // AuctionCompleteItem이 ID 조회와 DTO 조회 양쪽에서 사용되어 2회 접근됨
+    // [Todo] 현재는 쿼리 재사용성을 위해 중복접근 허용, 추후 성능 이슈 시 리팩토링 고려
+    public Slice<ItemPreviewDto> getMyAwardedItems(Pageable pageable) {
         User user = authUserProvider.getCurrentUser();
-        Slice<AuctionCompleteItem> completeItems = auctionCompleteRepository.findByUser(user,
-            pageable);
-        List<MypageListDto> result = new ArrayList<>();
+        Slice<Long> itemIdSlice = auctionCompleteRepository.findItemIdsByUserId(user.getUserId(), pageable);
 
-        for (AuctionCompleteItem item : completeItems) {
-            result.add(MypageListDto.fromEntity(item));
+        if (itemIdSlice.isEmpty()) {
+            return new SliceImpl<>(new ArrayList<>(), pageable, false);
         }
 
-        return new SliceImpl<>(result, pageable, completeItems.hasNext());
+        List<Long> itemIdList = itemIdSlice.getContent();
+        List<ItemPreviewDto> itemPreviewList = itemRepository.fetchItemPreviewsByFilters(
+            itemIdList,
+            null,       // sellerId
+            null,       // categoryId
+            null,       // tradingMethodId
+            null,       // region
+            true,       // isAuctionComplete
+            pageable
+        ).getContent();
+
+        return new SliceImpl<>(itemPreviewList, pageable, itemIdSlice.hasNext());
     }
 }

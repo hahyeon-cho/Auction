@@ -13,6 +13,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface AuctionProgressItemRepository extends JpaRepository<AuctionProgressItem, Long> {
 
+    // 특정 물품에 관한 경매 진행 테이블 정보 조회
+    Optional<AuctionProgressItem> findProgressItemByItem(Item item);
+
     // 물품 ID로 경매 진행 중인 물품 정보 조회
     Optional<AuctionProgressItem> findByItemItemId(Long itemId);
 
@@ -34,7 +37,6 @@ public interface AuctionProgressItemRepository extends JpaRepository<AuctionProg
     Optional<AuctionBidHighestDto> findHighestBidByAuctionProgressItemId(
         @Param("auctionProgressItemId") Long auctionProgressItemId);
 
-    Optional<List<AuctionProgressItem>> findAllByBidFinishTimeBefore(LocalDateTime now);
-    AuctionProgressItem findAuctionProgressItemByItem(Item item);
+
 }
 

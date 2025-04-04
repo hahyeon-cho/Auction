@@ -1,6 +1,6 @@
 package com.kcs3.auction.controller;
 
-import com.kcs3.auction.dto.MypageListDto;
+import com.kcs3.auction.dto.ItemPreviewDto;
 import com.kcs3.auction.dto.ResponseDto;
 import com.kcs3.auction.service.MypageService;
 import lombok.RequiredArgsConstructor;
@@ -30,30 +30,34 @@ public class MyPageController {
 
     // 사용자가 좋아요한 물품 목록 조회
     @GetMapping("/like")
-    public ResponseDto<Slice<MypageListDto>> getMyLikedItems(
-        @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseDto.ok(mypageService.loadLikedItems(pageable));
+    public ResponseDto<Slice<ItemPreviewDto>> getMyLikedItems(
+        @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseDto.ok(mypageService.getMyLikedItems(pageable));
     }
 
     // 사용자가 등록한 경매 물품 목록 조회
     @GetMapping("/auction")
-    public ResponseDto<Slice<MypageListDto>> getMyRegisteredItems(
-        @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseDto.ok(mypageService.loadRegisteredItems(pageable));
+    public ResponseDto<Slice<ItemPreviewDto>> getMyRegisteredItems(
+        @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseDto.ok(mypageService.getMyRegisteredItems(pageable));
     }
 
     // 사용자가 참여한 입찰 목록 조회
     @GetMapping("/bid")
-    public ResponseDto<Slice<MypageListDto>> getMyBidItems(
-        @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseDto.ok(mypageService.loadBidItems(pageable));
+    public ResponseDto<Slice<ItemPreviewDto>> getMyBidItems(
+        @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseDto.ok(mypageService.getMyBidItems(pageable));
     }
 
     // 사용자가 낙찰받은 물품 목록 조회
     @GetMapping("/award")
-    public ResponseDto<Slice<MypageListDto>> getMyAwardedItems(
-        @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseDto.ok(mypageService.loadAwardedItems(pageable));
+    public ResponseDto<Slice<ItemPreviewDto>> getMyAwardedItems(
+        @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseDto.ok(mypageService.getMyAwardedItems(pageable));
     }
 }
 
