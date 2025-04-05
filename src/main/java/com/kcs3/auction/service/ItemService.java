@@ -131,7 +131,7 @@ public class ItemService {
 
     // 물품 등록 서비스
     @Transactional
-    public void registerAuctionItem(ItemRegisterRequestDto requestDto, List<MultipartFile> images) {
+    public void createAuctionItem(ItemCreateRequestDto requestDto, List<MultipartFile> images) {
 
         User user = authUserProvider.getCurrentUser();
 
@@ -195,7 +195,7 @@ public class ItemService {
         itemElasticsearchRepository.save(ItemDocument.builder()
             .itemTitle(requestDto.getTitle())
             .itemId(item.getItemId())
-            .createAt(item.getCreatedAt())
+            .createdAt(item.getCreatedAt())
             .build());
 
         try {
