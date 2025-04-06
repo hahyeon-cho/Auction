@@ -10,10 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -47,14 +44,10 @@ public class Item extends BaseEntity {
     @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
-    @OneToOne(mappedBy = "item", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    // --- OneToOne ---
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
+    @JoinColumn(name = "item_detail_id", nullable = false, unique = true)
     private ItemDetail itemDetail;
-
-    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemLike> itemLikes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
-    private final List<AuctionInfo> auctionInfos = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean isAuctionComplete;
@@ -71,23 +64,11 @@ public class Item extends BaseEntity {
         this.category = category;
         this.tradingMethod = tradingMethod;
         this.region = region;
-        this.setItemDetail(itemDetail);
+        this.itemDetail = itemDetail;
         this.isAuctionComplete = false;
     }
 
-    // Setter
-    public void setItemDetail(ItemDetail itemDetail) {
-        this.itemDetail = itemDetail;
-        if (itemDetail.getItem() != this) {
-            itemDetail.setItem(this);
-        }
-    }
-
-    // modifier
-    public void addLike(ItemLike itemLike) { this.itemLikes.add(itemLike); }
-
-    public void addAuctionInfo(AuctionInfo auctionInfo) { this.auctionInfos.add(auctionInfo); }
-
+    // === Add & Update ===
     public void endAuction() {
         this.isAuctionComplete = true;
     }

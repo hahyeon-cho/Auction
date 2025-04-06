@@ -8,10 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -31,10 +28,6 @@ public class ItemDetail extends BaseEntity {
     @Column(nullable = false)
     private Long itemDetailId;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
-
     @Column(nullable = false)
     private String itemDetailContent;
 
@@ -47,10 +40,7 @@ public class ItemDetail extends BaseEntity {
     @Builder
     public ItemDetail(String itemDetailContent) { this.itemDetailContent = itemDetailContent; }
 
-    // Setter
-    public void setItem(Item item) { this.item = item; }
-
-    // modifier
+    // === Add & Update ===
     public void addImage(ItemImage img) { images.add(img); }
 
     public void addQna(ItemQna qna) { qnas.add(qna); }

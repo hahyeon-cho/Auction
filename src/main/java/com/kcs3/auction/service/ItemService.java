@@ -6,12 +6,11 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kcs3.auction.document.ItemDocument;
-import com.kcs3.auction.dto.CommentRequest;
-import com.kcs3.auction.dto.ItemDetailRequestDto;
-import com.kcs3.auction.dto.ItemRegisterRequestDto;
-import com.kcs3.auction.dto.QnaPostRequest;
-import com.kcs3.auction.dto.RecommendDto;
-import com.kcs3.auction.entity.Alarm;
+import com.kcs3.auction.dto.AuctionSummaryDto;
+import com.kcs3.auction.dto.ImageDto;
+import com.kcs3.auction.dto.ItemCreateRequestDto;
+import com.kcs3.auction.dto.ItemDetailResponseDto;
+import com.kcs3.auction.dto.QuestionWithAnswerDto;
 import com.kcs3.auction.entity.AuctionCompleteItem;
 import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.entity.Category;
@@ -19,120 +18,60 @@ import com.kcs3.auction.entity.Item;
 import com.kcs3.auction.entity.ItemDetail;
 import com.kcs3.auction.entity.ItemImage;
 import com.kcs3.auction.entity.ItemQuestion;
-import com.kcs3.auction.entity.QnaComment;
 import com.kcs3.auction.entity.Region;
 import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.entity.User;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
-import com.kcs3.auction.repository.AlarmRepository;
 import com.kcs3.auction.repository.AuctionCompleteItemRepository;
 import com.kcs3.auction.repository.AuctionProgressItemRepository;
 import com.kcs3.auction.repository.CategoryRepository;
-import com.kcs3.auction.repository.ItemDetailRepository;
 import com.kcs3.auction.repository.ItemElasticsearchRepository;
-import com.kcs3.auction.repository.ItemQuestionRepository;
 import com.kcs3.auction.repository.ItemRepository;
-import com.kcs3.auction.repository.QnaCommentRepository;
 import com.kcs3.auction.repository.RegionRepository;
 import com.kcs3.auction.repository.TradingMethodRepository;
-import com.kcs3.auction.repository.UserRepository;
 import com.kcs3.auction.utils.AuthUserProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Log4j2
 public class ItemService {
+
+    @Value("${aws.s3.bucket-name}")
+    private String s3Bucket;
+
+    private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard()
+        .withRegion(Regions.AP_NORTHEAST_2) // 서울
+        .build();
 
     private final AuthUserProvider authUserProvider;
 
-    private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_NORTHEAST_2) // 서울 리전
-        .build();
-
-    private final RecommendationService itemRecommendationService;
-
-    private final UserRepository userRepository;
-
     private final ItemRepository itemRepository;
-    private final ItemDetailRepository itemDetailRepository;
-
-    private final ItemQuestionRepository itemQuestionRepository;
-    private final QnaCommentRepository qnaCommentRepository;
-
     private final AuctionProgressItemRepository auctionProgressItemRepository;
     private final AuctionCompleteItemRepository auctionCompleteItemRepository;
-
-
-
-
-    private final ItemElasticsearchRepository itemElasticsearchRepository;
-
-
-    @Value("${cloud.aws.s3.bucketName}")
-    private String bucket;
 
     private final CategoryRepository categoryRepository;
     private final TradingMethodRepository tradingMethodRepository;
     private final RegionRepository regionRepository;
 
+    private final ItemQuestionService questionService;
+    private final ItemElasticsearchRepository itemElasticsearchRepository;
+    private final RecommendService itemRecommendationService;
 
-
-
-
-    public void postQna(QnaPostRequest request, Long itemId) {
-
-        ItemQuestion itemQuestion = ItemQuestion.builder().itemDetailId(this.findDetailByItemId(itemId)) // 아이템 상세 ID 설정
-            .questionContents(request.getQuestionContents()) // 질문 내용 설정
-            .questionUserId(request.getQuestionUserId()) // 질문 작성자 ID 설정
-            .build();
-
-        this.itemQuestionRepository.save(itemQuestion);
-    }
-
-
-    public void deleteQna(Long questionId) {
-        ItemQuestion itemQuestion = this.findItemQuestionById(questionId);
-        if (itemQuestion != null) {
-            this.itemQuestionRepository.delete(itemQuestion);
-        }
-    }
-
-
-    public void postComment(CommentRequest request, Long questionId) {
-
-        QnaComment comment = QnaComment.builder().questionId(this.findItemQuestionById(questionId))
-            .comment(request.getComment()).build();
-
-        this.qnaCommentRepository.save(comment);
-    }
-
-
-    public boolean deleteComment(Long commentId) {
-        QnaComment qnaComment = this.findCommentById(commentId);
-        if (qnaComment != null) {
-            this.qnaCommentRepository.delete(qnaComment);
-            return true;
-        }
-        return false;
-    }
-
-
-    // 물품 등록 서비스
+    // === 물품 등록 서비스 ===
     @Transactional
     public void createAuctionItem(ItemCreateRequestDto requestDto, List<MultipartFile> images) {
-
         User user = authUserProvider.getCurrentUser();
 
         Category category = categoryRepository.findByCategory(requestDto.getCategory())
@@ -141,8 +80,11 @@ public class ItemService {
         TradingMethod tradingMethod = tradingMethodRepository.findByTradingMethod(requestDto.getTradingMethod())
             .orElseThrow(() -> new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND));
 
-        Region region = regionRepository.findByRegion(requestDto.getRegion())
-            .orElseGet(() -> regionRepository.findByRegion("기타").get());
+        Region region = regionRepository.findByRegionName(requestDto.getRegion())
+            .orElseGet(() ->
+                regionRepository.findByRegionName("기타")
+                    .orElseThrow(() -> new CommonException(ErrorCode.DEFAULT_REGION_NOT_FOUND))
+            );
 
         // 상세 정보 생성
         ItemDetail itemDetail = ItemDetail.builder()
@@ -154,7 +96,7 @@ public class ItemService {
         try {
             imageUrls = uploadImagesAndGetUrls(images);
         } catch (IOException e) {
-            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new CommonException(ErrorCode.FILE_UPLOAD_FAILED);
         }
 
         for (String url : imageUrls) {
@@ -178,10 +120,12 @@ public class ItemService {
         // 경매 진행 중 정보 생성
         AuctionProgressItem auctionProgressItem = AuctionProgressItem.builder()
             .item(item)
-            .thumbnail(imageUrls.get(0))
             .itemTitle(requestDto.getTitle())
+            .thumbnail(imageUrls.get(0))
+
+            // 생각난건데 여기서 전체 지역정보 예:서울시 구로구 저장하고 지역코드는 서울시 정도였다는것을...
+            .location(region.getRegionName())
             .bidFinishTime(requestDto.getFinishTime())
-            .location(region.getRegion())
             .buyNowPrice(requestDto.getBuyNowPrice())
             .startPrice(requestDto.getStartPrice())
             .maxPrice(requestDto.getStartPrice())
@@ -198,12 +142,13 @@ public class ItemService {
             .createdAt(item.getCreatedAt())
             .build());
 
+        // 임베딩 값 저장
         try {
             itemRecommendationService.storeEmbeddingAfterItemRegister(
-                item.getItemId(),
+                item,
                 requestDto.getTitle(),
                 imageUrls.get(0),
-                region.getRegion(),
+                region.getRegionName(),
                 requestDto.getContents()
             );
         } catch (JsonProcessingException e) {
@@ -222,125 +167,71 @@ public class ItemService {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(img.getSize());
             metadata.setContentType(img.getContentType());
-            amazonS3Client.putObject(bucket, fileName, img.getInputStream(), metadata);
-            urls.add(amazonS3Client.getUrl(bucket, fileName).toString());
+
+            amazonS3Client.putObject(s3Bucket, fileName, img.getInputStream(), metadata);
+            String imageUrl = amazonS3Client.getUrl(s3Bucket, fileName).toString();
+            urls.add(imageUrl);
         }
 
         return urls;
     }
-    private ItemDetail findDetailByItemId(Long itemId){
-        Optional<ItemDetail> OitemDetail = itemDetailRepository.findByItemId(itemId);
-        if (OitemDetail.isPresent()) {
-            return OitemDetail.get();
+
+    // === 물품 상세 정보 조회 ===
+    @Transactional(readOnly = true)
+    public ItemDetailResponseDto loadItemDetail(Long itemId) {
+        // --- 객체 호출 ---
+        Item item = itemRepository.findById(itemId)
+            .orElseThrow(() -> new CommonException(ErrorCode.ITEM_NOT_FOUND));
+
+        User seller = item.getSeller();
+        ItemDetail itemDetail = item.getItemDetail();
+        List<ItemQuestion> itemQuestions = itemDetail.getQnas();
+
+        // --- 매핑 ---
+        // 아이템 경매 관련 정보 매핑 (경매 중 테이블 or 경매 완료 테이블)
+        AuctionSummaryDto auctionSummaryDto = loadAuctionSummary(item.getItemId(), item.isAuctionComplete());
+
+        // 이미지 url 정보 Dto 매핑
+        List<ImageDto> imageDtos = itemDetail.getImages().stream()
+            .map(image -> ImageDto.builder()
+                .imageUrl(image.getUrl())
+                .build())
+            .collect(Collectors.toList());
+
+        // 문의글 및 문의 답글 Dto 매핑
+        List<QuestionWithAnswerDto> qnaDtos = questionService.convertToQnaDtos(itemDetail.getQnas());
+
+        ItemDetailResponseDto responseDto = ItemDetailResponseDto.builder()
+            .itemId(item.getItemId())
+            .isAuctionComplete(item.isAuctionComplete())
+            .itemCreatedAt(item.getCreatedAt())
+            .sellerId(seller.getUserId())
+            .nickname(seller.getNickname())
+            .categoryName(item.getCategory().getCategoryName())
+            .tmCode(item.getTradingMethod().getTmCode())
+            .location(auctionSummaryDto.location())
+            .itemTitle(auctionSummaryDto.itemTitle())
+            .startPrice(auctionSummaryDto.startPrice())
+            .buyNowPrice(auctionSummaryDto.buyNowPrice())
+            .maxPrice(auctionSummaryDto.maxPrice())
+            .bidFinishTime(auctionSummaryDto.bidFinishTime())
+            .itemDetailContent(itemDetail.getItemDetailContent())
+            .images(imageDtos)
+            .questions(qnaDtos)
+            .build();
+
+        return responseDto;
+    }
+
+    private AuctionSummaryDto loadAuctionSummary(Long itemId, boolean isComplete) {
+        if (!isComplete) {
+            AuctionProgressItem progress = auctionProgressItemRepository.findByItemItemId(itemId)
+                .orElseThrow(() -> new CommonException(ErrorCode.ITEM_NOT_FOUND));
+            return AuctionSummaryDto.from(progress);
+        } else {
+            AuctionCompleteItem complete = auctionCompleteItemRepository.findByItemItemId(itemId)
+                .orElseThrow(() -> new CommonException(ErrorCode.ITEM_NOT_FOUND));
+            return AuctionSummaryDto.from(complete);
         }
-        return null;
     }
-
-    private ItemQuestion findItemQuestionById(long questionId) {
-        Optional<ItemQuestion> OitemQuestion = itemQuestionRepository.findById(questionId);
-        if (OitemQuestion.isPresent()) {
-            return OitemQuestion.get();
-        }
-        return null;
-    }
-
-    private QnaComment findCommentById(long commentId) {
-        Optional<QnaComment> optionalQnaComment = qnaCommentRepository.findById(commentId);
-        return optionalQnaComment.orElse(null);
-    }
-
-    public ItemDetailRequestDto getItemDetail(Long itemId) {
-        Item item = itemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("Item not found"));
-
-        AuctionProgressItem progressItem = auctionProgressItemRepository.findByItemItemId(itemId).orElse(null);
-
-        AuctionCompleteItem completeItem = null;
-        if (progressItem == null) {
-            completeItem = auctionCompleteItemRepository.findByItemItemId(itemId).orElseThrow(
-                () -> new RuntimeException(
-                    "AuctionProgressItem or AuctionCompleteItem not found for itemId: " + itemId));
-        }
-
-        ItemDetail itemDetail = itemDetailRepository.findByItemId(itemId)
-            .orElseThrow(() -> new RuntimeException("ItemDetail not found for itemId: " + itemId));
-
-        List<ItemQuestion> itemQuestions = itemQuestionRepository.findByItemDetailId_ItemDetailId(
-            itemDetail.getItemDetailId());
-
-        return toDTO(item, progressItem, completeItem, itemDetail, itemQuestions);
-    }
-
-    // DTO 생성 메서드
-    private ItemDetailRequestDto toDTO(Item item, AuctionProgressItem progressItem, AuctionCompleteItem completeItem,
-        ItemDetail itemDetail, List<ItemQuestion> itemQuestions) {
-        ItemDetailRequestDto dto = new ItemDetailRequestDto();
-        dto.setItemId(item.getItemId());
-        dto.setTitle(progressItem != null ? progressItem.getItemTitle() : completeItem.getItemTitle());
-        dto.setBidFinishTime(progressItem != null ? progressItem.getBidFinishTime() : completeItem.getBidFinishTime());
-        dto.setStartPrice(progressItem != null ? progressItem.getStartPrice() : completeItem.getStartPrice());
-        dto.setMaxPrice((progressItem != null && progressItem.getMaxPersonNickName() == null) ? 0
-            : ((progressItem != null) ? progressItem.getMaxPrice()
-                : ((completeItem.getMaxPersonNickName() == null) ? 0 : completeItem.getMaxPrice())));
-
-        // Optional을 사용하여 null 체크 및 값 설정
-        Integer buyNowPrice = Optional.ofNullable(progressItem != null ? progressItem.getBuyNowPrice()
-            : completeItem != null ? completeItem.getBuyNowPrice() : null).orElse(null);
-        dto.setBuyNowPrice(buyNowPrice);
-
-        dto.setAuctionComplete(item.isAuctionComplete());
-        dto.setItemCreateTime(item.getCreatedAt());
-        dto.setSellerId(item.getSeller().getUserId());
-        dto.setUserNickname(item.getSeller().getUserNickname());
-        dto.setItemDetailContent(itemDetail.getItemDetailContent());
-        dto.setCategoryName(item.getCategory().getCategory());
-
-        dto.setImages(itemDetail.getImages().stream().map(image -> {
-            ItemDetailRequestDto.ImageDTO imageDTO = new ItemDetailRequestDto.ImageDTO();
-            imageDTO.setImageURL(image.getUrl());
-            return imageDTO;
-        }).collect(Collectors.toList()));
-
-        dto.setQuestions(itemQuestions.stream().map(question -> {
-            ItemDetailRequestDto.QuestionDTO questionDTO = new ItemDetailRequestDto.QuestionDTO();
-            questionDTO.setQuestionId(question.getItemQuestionId());
-            questionDTO.setQuestionContents(question.getQuestionContents());
-            questionDTO.setQuestionTime(question.getCreatedAt());
-            questionDTO.setComments(question.getComments().stream().map(comment -> {
-                ItemDetailRequestDto.QuestionDTO.CommentDTO commentDTO = new ItemDetailRequestDto.QuestionDTO.CommentDTO();
-                commentDTO.setCommentId(comment.getQnaCommentId());
-                commentDTO.setCommentTime(comment.getCreatedAt());
-                commentDTO.setComment(comment.getComment());
-                return commentDTO;
-            }).collect(Collectors.toList()));
-            return questionDTO;
-        }).collect(Collectors.toList()));
-
-        return dto;
-    }
-
-    // 플라스크에서 받은 아이템 list dto로 작성
-    public List<RecommendDto> getItemsByIds(List<Long> itemIds) {
-        // 받은 리스트 출력
-        System.out.println("Received item IDs: " + itemIds);
-
-        List<AuctionProgressItem> auctionItems = auctionProgressItemRepository.findAllById(itemIds);
-
-        // 아이템 아이디를 키로 하는 맵을 생성
-        Map<Long, AuctionProgressItem> itemMap = auctionItems.stream()
-            .collect(Collectors.toMap(item -> item.getItem().getItemId(), item -> item));
-
-        // 원래의 순서를 유지하면서 DTO 리스트 생성
-        List<RecommendDto> recommendDtos = itemIds.stream().map(itemId -> {
-            AuctionProgressItem item = itemMap.get(itemId);
-            return new RecommendDto(item.getItem().getItemId(), item.getItemTitle(), item.getThumbnail(),
-                item.getMaxPrice());
-        }).collect(Collectors.toList());
-
-        // 반환하는 리스트 출력
-        System.out.println("Returning DTOs: " + recommendDtos);
-
-        return recommendDtos;
-    }
-
-
 }
