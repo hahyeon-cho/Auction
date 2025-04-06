@@ -21,8 +21,8 @@ public class MypageService {
 
     private final AuthUserProvider authUserProvider;
 
-    private final ItemLikeRepository itemLikeRepository;
     private final ItemRepository itemRepository;
+    private final ItemLikeRepository itemLikeRepository;
     private final AuctionInfoRepository auctionInfoRepository;
     private final AuctionCompleteItemRepository auctionCompleteRepository;
 
@@ -40,7 +40,7 @@ public class MypageService {
             null,       // sellerId
             null,       // categoryId
             null,       // tradingMethodId
-            null,       // region
+            null,       // regionId
             null,       // isAuctionComplete
             pageable
         ).getContent();
@@ -56,7 +56,7 @@ public class MypageService {
             user.getUserId(),
             null,       // categoryId
             null,       // tradingMethodId
-            null,       // region
+            null,       // regionId
             null,       // isAuctionComplete
             pageable
         );
@@ -81,7 +81,7 @@ public class MypageService {
             null,   // sellerId
             null,       // categoryId
             null,       // tradingMethodId
-            null,       // region
+            null,       // regionId
             null,       // isAuctionComplete
             pageable
         ).getContent();
@@ -106,7 +106,7 @@ public class MypageService {
             null,       // sellerId
             null,       // categoryId
             null,       // tradingMethodId
-            null,       // region
+            null,       // regionId
             true,       // isAuctionComplete
             pageable
         ).getContent();

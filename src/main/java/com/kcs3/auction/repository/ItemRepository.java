@@ -34,7 +34,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
                 tm.tmCode,
                 COALESCE(api.location, aci.location),
                 COALESCE(api.startPrice, aci.startPrice),
+                COALESCE(api.buyNowPirce, aci.buyNowPirce),
                 COALESCE(api.maxPrice, aci.maxPrice),
+                COALESCE(api.bidFinishTime, aci.bidFinishTime),
                 i.isAuctionComplete,
                 aci.isBidComplete
             )
@@ -43,24 +45,21 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             JOIN i.tradeMethod tm
             LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
             LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
-            WHERE (:itemIdList IS NULL OR i.id IN :itemIdList)
+            WHERE (:itemIdList IS NULL OR i.itemId IN :itemIdList)
               AND (:sellerId IS NULL OR i.seller.id = :sellerId)
-              AND (:categoryId IS NULL OR c.id = :categoryId)
-              AND (:tradingMethodId IS NULL OR tm.id = :tradingMethodId)
-              AND (:region IS NULL OR COALESCE(api.location, aci.location) = :region)
+              AND (:categoryId IS NULL OR i.category.id = :categoryId)
+              AND (:tradingMethodId IS NULL OR i.tradeMethod.id = :tradingMethodId)
+              AND (:regionId IS NULL OR i.region.regionId = :regionId)
               AND (:isAuctionComplete IS NULL OR i.isAuctionComplete = :isAuctionComplete)
+            ORDER BY i.createdAt DESC
         """, countQuery = """
             SELECT COUNT(i)
             FROM Item i
-            JOIN i.category c
-            JOIN i.tradeMethod tm
-            LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
-            LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
-            WHERE (:itemIdList IS NULL OR i.id IN :itemIdList)
+            WHERE (:itemIdList IS NULL OR i.itemId IN :itemIdList)
               AND (:sellerId IS NULL OR i.seller.id = :sellerId)
-              AND (:categoryId IS NULL OR c.id = :categoryId)
-              AND (:tradingMethodId IS NULL OR tm.id = :tradingMethodId)
-              AND (:region IS NULL OR COALESCE(api.location, aci.location) = :region)
+              AND (:categoryId IS NULL OR i.category.id = :categoryId)
+              AND (:tradingMethodId IS NULL OR i.tradeMethod.id = :tradingMethodId)
+              AND (:regionId IS NULL OR i.region.regionId = :regionId)
               AND (:isAuctionComplete IS NULL OR i.isAuctionComplete = :isAuctionComplete)
         """)
     Slice<ItemPreviewDto> fetchItemPreviewsByFilters(
@@ -68,7 +67,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
         @Param("sellerId") Long sellerId,
         @Param("categoryId") Long categoryId,
         @Param("tradingMethodId") Long tradingMethodId,
-        @Param("region") String region,
+        @Param("regionId") Long regionId,
         @Param("isAuctionComplete") Boolean isAuctionComplete,
         Pageable pageable
     );
