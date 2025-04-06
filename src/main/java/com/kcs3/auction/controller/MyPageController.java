@@ -12,13 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 마이페이지 관련 API 컨트롤러 인증된 사용자의 마이페이지 정보를 조회하는 기능을 제공합니다.
+ * 마이페이지 관련 API 컨트롤러 <p>
+ * 인증된 사용자의 마이페이지 정보를 조회하는 기능을 제공합니다. <p>
+ *
  * <pre>
  * endpoints:
- * - GET /like    : 사용자가 좋아요한 물품 목록 조회
- * - GET /auction : 사용자가 등록한 경매 물품 목록 조회
- * - GET /bid     : 사용자가 입찰에 참여한 목록 조회
- * - GET /award   : 사용자가 낙찰받은 물품 목록 조회
+ * - GET  /like    : 사용자가 좋아요한 물품 목록 조회
+ * - GET  /auction : 사용자가 등록한 경매 물품 목록 조회
+ * - GET  /bid     : 사용자가 입찰에 참여한 목록 조회
+ * - GET  /award   : 사용자가 낙찰받은 물품 목록 조회
  * </pre>
  */
 @RestController
@@ -31,7 +33,7 @@ public class MyPageController {
     // 사용자가 좋아요한 물품 목록 조회
     @GetMapping("/like")
     public ResponseDto<Slice<ItemPreviewDto>> getMyLikedItems(
-        @PageableDefault(size = 10) Pageable pageable
+        @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseDto.ok(mypageService.getMyLikedItems(pageable));
     }
@@ -39,7 +41,7 @@ public class MyPageController {
     // 사용자가 등록한 경매 물품 목록 조회
     @GetMapping("/auction")
     public ResponseDto<Slice<ItemPreviewDto>> getMyRegisteredItems(
-        @PageableDefault(size = 10) Pageable pageable
+        @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseDto.ok(mypageService.getMyRegisteredItems(pageable));
     }
@@ -47,7 +49,7 @@ public class MyPageController {
     // 사용자가 참여한 입찰 목록 조회
     @GetMapping("/bid")
     public ResponseDto<Slice<ItemPreviewDto>> getMyBidItems(
-        @PageableDefault(size = 10) Pageable pageable
+        @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseDto.ok(mypageService.getMyBidItems(pageable));
     }
@@ -55,7 +57,7 @@ public class MyPageController {
     // 사용자가 낙찰받은 물품 목록 조회
     @GetMapping("/award")
     public ResponseDto<Slice<ItemPreviewDto>> getMyAwardedItems(
-        @PageableDefault(size = 10) Pageable pageable
+        @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseDto.ok(mypageService.getMyAwardedItems(pageable));
     }
