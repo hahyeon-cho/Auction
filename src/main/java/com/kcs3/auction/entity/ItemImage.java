@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,15 +37,5 @@ public class ItemImage extends BaseEntity {
     public ItemImage(ItemDetail itemDetail, String url) {
         this.itemDetail = itemDetail;
         this.url = url;
-    }
-
-    // toString
-    @Override
-    public String toString() {
-        return "ItemImage{" +
-            "id=" + itemImage +  // BaseEntity에서 상속받은 ID
-            ", url='" + url + '\'' +
-            ", itemDetail=" + (itemDetail != null ? "ItemDetail[id=" + itemDetail.getItemDetailId() + "]" : "null") +
-            '}';
     }
 }

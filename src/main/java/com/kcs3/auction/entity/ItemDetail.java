@@ -31,25 +31,20 @@ public class ItemDetail extends BaseEntity {
     @Column(nullable = false)
     private String itemDetailContent;
 
+    // --- OneToMany ---
     @OneToMany(mappedBy = "itemDetail", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemImage> images = new ArrayList<>();;
+    private final List<ItemImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "itemDetail", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemQna> qnas = new ArrayList<>();;
+    private final List<ItemQuestion> qnas = new ArrayList<>();
 
     @Builder
-    public ItemDetail(String itemDetailContent) { this.itemDetailContent = itemDetailContent; }
+    public ItemDetail(String itemDetailContent) {
+        this.itemDetailContent = itemDetailContent;
+    }
 
     // === Add & Update ===
     public void addImage(ItemImage img) { images.add(img); }
 
-    public void addQna(ItemQna qna) { qnas.add(qna); }
-
-    // toString
-    @Override
-    public String toString() {
-        return "ItemDetail {" + "id=" + getItemDetailId() +  // BaseEntity에서 상속받은 ID
-            ", content='" + itemDetailContent + '\'' +
-            ", item=" + (item != null ? "Item[id=" + item.getItemId() + "]" : "null") + '}';
-    }
+    public void addQna(ItemQuestion qna) { qnas.add(qna); }
 }

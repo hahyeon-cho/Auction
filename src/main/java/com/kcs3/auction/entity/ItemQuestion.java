@@ -23,34 +23,38 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ItemQna extends BaseEntity {
+public class ItemQuestion extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    private Long itemQnanId;
+    private Long itemQuestionId;
+
+    // === Core Relationships ===
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "item_detail_id", nullable = false)
+    private ItemDetail itemDetail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_detail_id", nullable = false)
-    private ItemDetail itemDetail;
-
+    // === Basic column ===
     @Column(nullable = false)
-    private String qnaContent;
+    private String questionContent;
 
-    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemQnaComment> comments = new ArrayList<>();;
+    // === Other Relationships ===
+    // --- OneToMany ---
+    @OneToMany(mappedBy = "itemQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<ItemAnswer> answers = new ArrayList<>();
 
     @Builder
-    public ItemQna(User user, ItemDetail itemDetail, String qnaContent) {
-        this.user = user;
+    public ItemQuestion(ItemDetail itemDetail, User user, String questionContent) {
         this.itemDetail = itemDetail;
-        this.qnaContent = qnaContent;
+        this.user = user;
+        this.questionContent = questionContent;
     }
 
-    // modifier
-    public void addComment(ItemQnaComment comment) { comments.add(comment); }
+    // === Add & Update ===
+    public void addAnswer(ItemAnswer answer) { answers.add(answer); }
 }

@@ -28,19 +28,26 @@ public class Item extends BaseEntity {
     @Column(nullable = false)
     private Long itemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id")
+    // === Core Relationships ===
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
-    @ManyToOne
+    // === Basic column ===
+    @Column(nullable = false)
+    private boolean isAuctionComplete;
+
+    // === Other Relationships ===
+    // --- ManyToOne ---
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "trading_method_id", nullable = false)
     private TradingMethod tradingMethod;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
@@ -48,9 +55,6 @@ public class Item extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
     @JoinColumn(name = "item_detail_id", nullable = false, unique = true)
     private ItemDetail itemDetail;
-
-    @Column(nullable = false)
-    private boolean isAuctionComplete;
 
     @Builder
     public Item(

@@ -3,11 +3,12 @@ package com.kcs3.auction.entity;
 import com.kcs3.auction.model.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -25,7 +26,8 @@ public class Recommend extends BaseEntity {
     @Column(nullable = false)
     private Long recommendId;
 
-    @JoinColumn(name = "item_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "item_id", nullable = false, unique = true)
     private Item item;
 
     @Column(columnDefinition = "TEXT")
@@ -60,9 +62,8 @@ public class Recommend extends BaseEntity {
         this.representEmbeddingVec = representEmbeddingVec;
     }
 
-    // Setter
-    public void setRepresentEmbeddingVec (String representingVecRepresent) {
+    // === Add & Update ===
+    public void updateRepresentEmbeddingVec(String representingVecRepresent) {
         this.representEmbeddingVec = representingVecRepresent;
     }
 }
-

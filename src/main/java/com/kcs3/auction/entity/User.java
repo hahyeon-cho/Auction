@@ -32,26 +32,29 @@ public class User extends BaseEntity {
     private Long userId;
 
     @Column(nullable = false, length = 255)
-    private String userNickname;
+    private String nickname;
 
     @Column(nullable = false, length = 255, unique = true)
-    private String userEmail;
+    private String email;
 
     @Column(nullable = false, columnDefinition = "int default 0")
-    private int userPoint;
+    private Integer userPoint;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemLike> itemLikes = new ArrayList<>();;
+    private final List<ItemLike> itemLikes = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "user_cookies", joinColumns = @JoinColumn(name = "userId"))
     @Column(name = "cookie")
-    private final List<Long> cookies = new ArrayList<>();;
+    private final List<Long> cookies = new ArrayList<>();
 
     @Builder
-    public User(String userNickname, String userEmail, int userPoint) {
-        this.userNickname = userNickname;
-        this.userEmail = userEmail;
+    public User(String nickname, String email, Integer userPoint) {
+        this.nickname = nickname;
+        this.email = email;
         this.userPoint = userPoint;
     }
+
+    // === Add & Update ===
+    public void addLike(ItemLike itemLike) { this.itemLikes.add(itemLike); }
 }

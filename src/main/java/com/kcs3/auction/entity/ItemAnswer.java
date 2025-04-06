@@ -19,23 +19,28 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ItemQnaComment extends BaseEntity {
+public class ItemAnswer extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    private Long itemQnaCommentId;
+    private Long itemAnswerId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "item_qna_Id", nullable = false)
-    private ItemQna itemQna;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "item_question_Id", nullable = false)
+    private ItemQuestion itemQuestion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
-    private String comment;
+    private String answerContent;
 
     @Builder
-    public ItemQnaComment(ItemQna itemQna, String comment) {
-        this.itemQna = itemQna;
-        this.comment = comment;
+    public ItemAnswer(ItemQuestion itemQuestion, User user, String answerContent) {
+        this.itemQuestion = itemQuestion;
+        this.user = user;
+        this.answerContent = answerContent;
     }
 }

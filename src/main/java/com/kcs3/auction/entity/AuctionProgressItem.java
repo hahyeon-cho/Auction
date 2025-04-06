@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -30,8 +29,8 @@ public class AuctionProgressItem extends BaseEntity {
     @Column(nullable = false)
     private Long auctionProgressItemId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "item_id", nullable = false, unique = true)
     private Item item;
 
     @Column(nullable = false)
@@ -41,51 +40,52 @@ public class AuctionProgressItem extends BaseEntity {
     private String thumbnail;
 
     @Column(nullable = false)
-    private int startPrice;
+    private String location;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
+    private Integer startPrice;
+
     private Integer buyNowPrice;
 
     @Column(nullable = false)
     private LocalDateTime bidFinishTime;
 
-    @Column(nullable = false)
-    private String location;
-
+    // === max bid info ===
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "max_bid_user_id")
+    private User maxBidUser;
 
-    private String maxPersonNickName;
+    private String maxBidUserNickname;
 
     @Column(nullable = false)
     private Integer maxPrice;
 
+    // === version ===
     @Version
     private Integer version;
 
     @Builder
     public AuctionProgressItem(
-        Item item, String itemTitle, String thumbnail,
-        int startPrice, Integer buyNowPrice, LocalDateTime bidFinishTime,
-        String location, User user, String maxPersonNickName, Integer maxPrice
+        Item item, String itemTitle, String thumbnail, String location,
+        Integer startPrice, Integer buyNowPrice, LocalDateTime bidFinishTime,
+        User maxBidUser, String maxBidUserNickname, Integer maxPrice
     ) {
         this.item = item;
         this.itemTitle = itemTitle;
         this.thumbnail = thumbnail;
         this.startPrice = startPrice;
+        this.location = location;
         this.buyNowPrice = buyNowPrice;
         this.bidFinishTime = bidFinishTime;
-        this.location = location;
-        this.user = user;
-        this.maxPersonNickName = maxPersonNickName;
+        this.maxBidUser = maxBidUser;
+        this.maxBidUserNickname = maxBidUserNickname;
         this.maxPrice = maxPrice;
     }
 
-    // modifier
-    public void updateAuctionMaxBid(User user, String nickname, int price) {
-        this.user = user;
-        this.maxPersonNickName = nickname;
+    // === Add & Update ===
+    public void updateAuctionMaxBid(User user, String nickname, Integer price) {
+        this.maxBidUser = user;
+        this.maxBidUserNickname = nickname;
         this.maxPrice = price;
     }
 }
