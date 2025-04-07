@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,10 +18,9 @@ public class AlarmService {
     private final AlarmRepository alarmRepository;
 
     public List<String> loadAlarm() {
-
         User user = authUserProvider.getCurrentUser();
 
-        List<Alarm> alarms = alarmRepository.findTop4ByUserOrderByCreatedAtDesc(user);
+        List<Alarm> alarms = alarmRepository.findTop4ByUserIdOrderByCreatedAtDesc(user.getUserId());
 
         return alarms.stream()
             .map(Alarm::getAlarmContent)
