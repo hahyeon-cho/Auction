@@ -46,9 +46,14 @@ public enum ErrorCode {
     LOGIN_USER_NOT_FOUND(40403, HttpStatus.NOT_FOUND, "로그인한 사용자가 존재하지 않습니다."),
     AUTH_HEADER_NOT_FOUND(40404, HttpStatus.NOT_FOUND, "Authorization 헤더가 존재하지 않습니다."),
     ITEM_NOT_FOUND(40405, HttpStatus.NOT_FOUND, "해당 경매 물품을 찾을 수 없습니다."),
-    AUCTION_PRICE_NOT_FOUND(40406, HttpStatus.NOT_FOUND, "경매 가격 정보를 찾을 수 없습니다."),
+    CATEGORY_NOT_FOUND(40406, HttpStatus.NOT_FOUND, "해당 카테고리 정보를 찾을 수 없습니다."),
     TRADING_METHOD_NOT_FOUND(40407, HttpStatus.NOT_FOUND, "해당 거래 방식 정보를 찾을 수 없습니다."),
-    CATEGORY_NOT_FOUND(40408, HttpStatus.NOT_FOUND, "해당 카테고리 정보를 찾을 수 없습니다."),
+    DEFAULT_REGION_NOT_FOUND(40408, HttpStatus.NOT_FOUND, "기본값인 '기타' 지역이 존재하지 않습니다."),
+    ITEM_DETAIL_NOT_FOUND(40409, HttpStatus.NOT_FOUND, "해당 경매 물품에 관한 상세 정보를 찾을 수 없습니다."),
+    ITEM_QUESTION_NOT_FOUND(40410, HttpStatus.NOT_FOUND, "해당 문의글 정보를 찾을 수 없습니다."),
+    ITEM_ANSWER_NOT_FOUND(40411, HttpStatus.NOT_FOUND, "해당 답글 정보를 찾을 수 없습니다."),
+    ITEM_CACHE_NOT_FOUND(40412, HttpStatus.NOT_FOUND, "캐시에 저장된 경매 물품 리스트를 찾을 수 없습니다."),
+    AUCTION_PRICE_NOT_FOUND(404013, HttpStatus.NOT_FOUND, "경매 가격 정보를 찾을 수 없습니다."),
 
     // 405 - Method Not Allowed
     METHOD_NOT_ALLOWED(40500, HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메소드입니다."),

@@ -52,38 +52,49 @@ public class HotAndNewService {
                 .map(RedisItemDto.class::cast)
                 .collect(Collectors.toList());
 
+        } catch (RedisConnectionFailureException | RedisSystemException e) {
+            log.warn("Redis 연결 실패: {}", e.getMessage(), e);
+            throw new CommonException(ErrorCode.REDIS_CONNECTION_FAILED);
+        }
+    }
 
-    private final RedisTemplate<String, HotItemsDto> redisTemplate;
+    // Hot 아이템 목록 Redis 조회
+    public RedisItemListDto getHotItemsByRegion(String regionName) {
+        Long regionId = Optional.ofNullable(regionRepository.findIdByRegionName(regionName))
+            .orElse(1L);
 
-    /**
-     * Hot 아이템 목록 Redis 조회 서비스 로직
-     */
-    public HotItemListDto getHotItems(){
+        List<RedisItemDto> items = getItemsFromRedis("hot_items:", regionId);
 
-        List<HotItemsDto> hotItemsDtos = new ArrayList<>();
-
-        for (int i=1;i<=10;i++) {
-            hotItemsDtos.add( redisTemplate.opsForValue().get("hot_item:"+i));
+        if (items.isEmpty() && regionId != 1L) {
+            items = getItemsFromRedis("hot_items:", 1L);  // fallback
         }
 
-        return HotItemListDto.builder()
-            .hotItemListDtos(hotItemsDtos)
+        if (items.isEmpty()) {
+            throw new CommonException(ErrorCode.ITEM_CACHE_NOT_FOUND);
+        }
+
+        return RedisItemListDto.builder()
+            .redisItemDtos(items)
             .build();
     }
 
-    /**
-     *  New 아이템 목록 Redis 조회 서비스 로직
-     */
-    public HotItemListDto getNewItems(){
+    // New 아이템 목록 Redis 조회
+    public RedisItemListDto getNewItemsByRegion(String regionName) {
+        Long regionId = Optional.ofNullable(regionRepository.findIdByRegionName(regionName))
+            .orElse(1L);
 
-        List<HotItemsDto> newItemsDtos = new ArrayList<>();
+        List<RedisItemDto> items = getItemsFromRedis("new_item:", regionId);
 
-        for (int i=1;i<=10;i++) {
-            newItemsDtos.add( redisTemplate.opsForValue().get("new_item:"+i));
+        if (items.isEmpty() && regionId != 1L) {
+            items = getItemsFromRedis("new_item:", 1L);  // fallback
         }
 
-        return HotItemListDto.builder()
-            .hotItemListDtos(newItemsDtos)
+        if (items.isEmpty()) {
+            throw new CommonException(ErrorCode.ITEM_CACHE_NOT_FOUND);
+        }
+
+        return RedisItemListDto.builder()
+            .redisItemDtos(items)
             .build();
     }
 

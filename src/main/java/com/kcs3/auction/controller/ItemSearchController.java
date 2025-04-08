@@ -51,22 +51,6 @@ public class ItemSearchController {
     }
 
     /**
-     * Redis에서 Hot Item 목록 조회 - API
-     */
-    @GetMapping("/hot-item")
-    public ResponseDto<HotItemListDto> getHotItemsSaveApi() {
-        return ResponseDto.ok(itemListService.getHotItems());
-    }
-
-    /**
-     * Redis에서 New Item 목록 조회 - API
-     */
-    @GetMapping("/new-item")
-    public ResponseDto<HotItemListDto> getNewItemsSaveApi() {
-        return ResponseDto.ok(itemListService.getNewItems());
-    }
-
-    /**
      * 물품 상세정보 조회 api
      */
     @GetMapping("/auction/{itemId}")
