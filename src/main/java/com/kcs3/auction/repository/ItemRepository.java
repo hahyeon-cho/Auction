@@ -72,13 +72,16 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
         Pageable pageable
     );
 
-    // Redis에 저장할 대상인 물품 ID로 경매 진행 중 물품 조회 (HOT/NEW 용도)
-    @Query("SELECT api " +
-        "FROM AuctionProgressItem api " +
-        "JOIN FETCH api.item i " +
-        "JOIN FETCH i.category c " +
-        "WHERE (i.itemId = :itemId)")
-    AuctionProgressItem findByHotItemList(@Param("itemId") Long itemId);
+    // 지역별 신규 물품 ID 목록 조회
+    @Query("""
+        SELECT i.itemId
+        FROM Item i
+        JOIN i.region r
+        WHERE i.isAuctionComplete = false AND r.regionId = :regionId
+        ORDER BY i.createdAt DESC
+        """)
+    List<Long> findLatestInProgressItemIdsByRegion(@Param("regionId") Long regionId, Pageable pageable);
+
 
     // 경매 진행 중 물품 목록 조회
     @Query("SELECT ap FROM AuctionProgressItem ap " +

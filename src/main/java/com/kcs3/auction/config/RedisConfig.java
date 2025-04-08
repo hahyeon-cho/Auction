@@ -1,6 +1,6 @@
 package com.kcs3.auction.config;
 
-import com.kcs3.auction.dto.HotItemsDto;
+import com.kcs3.auction.dto.RedisItemDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,13 +29,20 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, HotItemsDto> redisTemplate() {
-        RedisTemplate<String, HotItemsDto> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
-        template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    public RedisTemplate<String, RedisItemDto> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, RedisItemDto> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        // 키는 문자열로 저장
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+
+        // 값은 JSON 직렬화
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
+        template.setDefaultSerializer(serializer); // 기타 serializer 설정이 없을 때 사용
+
         return template;
     }
 }

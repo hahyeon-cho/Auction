@@ -17,27 +17,15 @@ public interface AuctionInfoRepository extends JpaRepository<AuctionInfo, Long> 
     @Query("SELECT DISTINCT ai.item.itemId FROM AuctionInfo ai WHERE ai.userId = :userId ORDER BY ai.createdAt DESC")
     Slice<Long> findItemIdsByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    // 물품 ID로 (입찰자 닉네임, 입찰가) 목록 조회
-    @Query(
-        "SELECT new com.kcs3.auction.dto.AuctionInfoSummeryDto(user.userNickname, ai.bidPrice) " +
-            "FROM AuctionInfo ai " +
-            "JOIN ai.user user " +
-            "WHERE ai.item.itemId = :itemId")
-    List<AuctionInfoSummeryDto> findInfoSummariesByItemId(Long itemId);
-
-    // Hot 물품 10개 조회
-    @Query("SELECT DISTINCT item.itemId " +
-        "FROM AuctionInfo ai " +
-        "JOIN ai.item item " +
-        "WHERE item.isAuctionComplete = false " +
-        "GROUP BY item.itemId " +
-        "ORDER BY COUNT(ai.user) DESC")
-    List<Long> findTop10ItemIds(Pageable pageable);
-
-    // New 물품 10개 조회
-    @Query("SELECT DISTINCT item.itemId " +
-        "FROM Item item " + // 공백 추가
-        "WHERE item.isAuctionComplete = false " +
-        "ORDER BY item.itemId DESC")
-    List<Long> findNew10ItemIds(Pageable pageable);
+    // 지역별 인기 물품 ID 목록 조회
+    @Query("""
+        SELECT i.itemId
+        FROM AuctionInfo ai
+        JOIN ai.item i
+        JOIN i.region r
+        WHERE i.isAuctionComplete = false AND r.regionId = :regionId
+        GROUP BY i.itemId
+        ORDER BY COUNT(ai.user.userId) DESC
+        """)
+    List<Long> findPopularProgressItemIdsByRegion(@Param("regionId") Long regionId, Pageable pageable);
 }
