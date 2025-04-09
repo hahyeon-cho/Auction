@@ -1,6 +1,5 @@
 package com.kcs3.auction.config;
 
-import com.kcs3.auction.utils.CustomSuccessHandler;
 import com.kcs3.auction.utils.JWTFilter;
 import com.kcs3.auction.utils.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,17 +22,17 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JWTUtil jwtUtil;
-    private final CustomSuccessHandler customSuccessHandler;
-
     @Value("${frontend.url}")
     private String frontendUrl;
+
+    private final JWTUtil jwtUtil;
 
     @Bean
     public SecurityFilterChain filterChain(@NonNull HttpSecurity http) throws Exception {
 
         // CORS 설정
-        http.cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
+        http.cors(corsCustomizer
+            -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
             @Override
             public CorsConfiguration getCorsConfiguration(@NonNull HttpServletRequest request) {
                 CorsConfiguration configuration = new CorsConfiguration();
@@ -55,15 +54,23 @@ public class SecurityConfig {
         http.httpBasic(basic -> basic.disable());
 
         // 세션 사용하지 않음 (JWT 기반)
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(session
+            -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // JWT 필터 등록
         http.addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         // 경로별 인가 설정
-        http.authorizeHttpRequests(
-            auth -> auth.requestMatchers("/api/v1/no-auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/ws/**",
-                "/actuator/**").permitAll().anyRequest().authenticated());
+        http.authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/api/v1/no-auth/**",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/ws/**",
+                "/actuator/**"
+            ).permitAll()
+            .anyRequest().authenticated()
+        );
 
         return http.build();
     }
