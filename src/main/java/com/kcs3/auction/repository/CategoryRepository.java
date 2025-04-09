@@ -7,6 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    @Query("SELECT c FROM Category c WHERE c.category = :category")
-    Optional<Category> findByName(@Param("category") String category);
+
+    // 카테고리명으로 카테고리 조회
+    Optional<Category> findByCategory(String category);
+
+    // 카테고리명으로 카테고리 ID 조회
+    @Query("SELECT c.id FROM Category c WHERE c.categoryName = :name")
+    Long findIdByCategory(@Param("name") String name);
 }
