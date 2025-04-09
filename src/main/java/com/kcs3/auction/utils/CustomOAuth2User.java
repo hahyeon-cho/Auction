@@ -1,6 +1,6 @@
 package com.kcs3.auction.utils;
 
-import com.kcs3.auction.dto.UserDTO;
+import com.kcs3.auction.dto.UserDto;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -11,35 +11,24 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
 
-    private final UserDTO userDTO;
+    private final UserDto userDto;
 
     @Override
-    public Map<String, Object> getAttributes() {
-        return null;
-    }
+    public Map<String, Object> getAttributes() { return null; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> collection = new ArrayList<>();
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
 
-        collection.add(new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return "유저";
-            }
-        });
+        authorities.add(() -> "유저");
 
-        return collection;
+        return authorities;
     }
 
     @Override
-    public String getName() {
-        return userDTO.getUserNickname();
-    }
+    public String getName() { return userDto.getNickname(); }
 
-    public String getEmail(){
-        return userDTO.getEmail();
-    }
+    public String getEmail() { return userDto.getEmail(); }
 
-    public Long getUserId(){ return userDTO.getUserId();}
+    public Long getUserId() { return userDto.getUserId(); }
 }
