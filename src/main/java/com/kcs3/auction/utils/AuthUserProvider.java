@@ -37,7 +37,7 @@ public class AuthUserProvider {
 
         CustomOAuth2User principal = (CustomOAuth2User) authentication.getPrincipal();
 
-        return userRepository.findByUserId(principal.getUserId())
+        return userRepository.findById(principal.getUserId())
             .orElseThrow(() -> new CommonException(ErrorCode.USER_NOT_FOUND));
     }
 }
