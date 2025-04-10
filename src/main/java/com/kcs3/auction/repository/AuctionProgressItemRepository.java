@@ -1,7 +1,5 @@
 package com.kcs3.auction.repository;
 
-import com.kcs3.auction.dto.AuctionBidHighestDto;
-import com.kcs3.auction.dto.AuctionPriceDto;
 import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.entity.Item;
 import java.time.LocalDateTime;
@@ -30,22 +28,5 @@ public interface AuctionProgressItemRepository extends JpaRepository<AuctionProg
 
     // 현재 시간 기준으로 종료 처리되어야 할 경매 진행 물품 전체 조회
     Optional<List<AuctionProgressItem>> findAllByBidFinishTimeBefore(LocalDateTime now);
-
-    // 물품 ID로 (즉시 구매가, 현재 최고 입찰가) 조회
-    @Query("SELECT new com.kcs3.auction.dto.AuctionPriceDto(api.buyNowPrice, api.maxPrice) " +
-        "FROM AuctionProgressItem api " +
-        "WHERE api.item.itemId = :itemId")
-    Optional<AuctionPriceDto> findPriceByItemItemId(Long itemId);
-
-    // 경매 진행 물품 ID로 (최고 입찰자 ID, 닉네임, 입찰가) 조회
-    @Query("SELECT new com.kcs3.auction.dto.AuctionBidHighestDto(" +
-        "api.auctionProgressItemId, user.userId, user.userNickname, api.maxPrice) " +
-        "FROM AuctionProgressItem api " +
-        "LEFT JOIN api.user user " +
-        "WHERE api.auctionProgressItemId = :auctionProgressItemId")
-    Optional<AuctionBidHighestDto> findHighestBidByAuctionProgressItemId(
-        @Param("auctionProgressItemId") Long auctionProgressItemId);
-
-
 }
 

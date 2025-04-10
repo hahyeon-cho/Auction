@@ -1,6 +1,5 @@
 package com.kcs3.auction.repository;
 
-import com.kcs3.auction.dto.AuctionInfoSummeryDto;
 import com.kcs3.auction.entity.AuctionInfo;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +13,12 @@ import org.springframework.stereotype.Repository;
 public interface AuctionInfoRepository extends JpaRepository<AuctionInfo, Long> {
 
     // 사용자가 참여한 경매 물품 목록을 최근 입찰한 순서로 조회
-    @Query("SELECT DISTINCT ai.item.itemId FROM AuctionInfo ai WHERE ai.userId = :userId ORDER BY ai.createdAt DESC")
+    @Query("""
+        SELECT DISTINCT ai.item.itemId
+        FROM AuctionInfo ai
+        WHERE ai.userId = :userId
+        ORDER BY ai.createdAt DESC
+        """)
     Slice<Long> findItemIdsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     // 지역별 인기 물품 ID 목록 조회
