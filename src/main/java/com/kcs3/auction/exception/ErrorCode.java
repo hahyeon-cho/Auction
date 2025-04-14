@@ -37,7 +37,8 @@ public enum ErrorCode {
     // 403 - Forbidden
     ACCESS_DENIED(40300, HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     AUTH_CODE_MISMATCH(40301, HttpStatus.FORBIDDEN, "인증 코드가 일치하지 않습니다."),
-    USER_MISMATCH(40302, HttpStatus.FORBIDDEN, "해당 사용자가 일치하지 않습니다."),
+    USER_MISMATCH(40302, HttpStatus.FORBIDDEN, "사용자가 일치하지 않습니다."),
+    PERMISSION_DENIED(40303, HttpStatus.FORBIDDEN, "권한이 없는 사용자입니다."),
 
     // 404 - Not Found
     ENDPOINT_NOT_FOUND(40400, HttpStatus.NOT_FOUND, "존재하지 않는 API 엔드포인트입니다."),
@@ -64,9 +65,10 @@ public enum ErrorCode {
     // 500 - Internal Server Error
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러입니다."),
     FILE_UPLOAD_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패하였습니다."),
+    REDIS_CONNECTION_FAILED(50301, HttpStatus.SERVICE_UNAVAILABLE, "레디스 서버에 연결할 수 없습니다."),
     EMBEDDING_SAVE_FAILED(50002, HttpStatus.INTERNAL_SERVER_ERROR, "임베딩 값을 저장하는 중 오류가 발생하였습니다."),
     EMBEDDING_API_FAILED(50003, HttpStatus.INTERNAL_SERVER_ERROR, "대표 임베딩을 생성하는 외부 API 호출 중 오류가 발생하였습니다."),
-    RECOMMENDATION_FAIL(50004, HttpStatus.INTERNAL_SERVER_ERROR, "추천 서버 통신에 실패했습니다.");
+    RECOMMENDATION_FAILED(50004, HttpStatus.INTERNAL_SERVER_ERROR, "추천 서버 통신에 실패했습니다.");
 
     private final Integer code;
     private final HttpStatus httpStatus;
