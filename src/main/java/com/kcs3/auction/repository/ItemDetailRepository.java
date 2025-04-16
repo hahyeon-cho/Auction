@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ItemDetailRepository extends JpaRepository<ItemDetail, Long> {
 
+    // 물품 ID로 상세 정보 조회
     @Query("SELECT i FROM ItemDetail i WHERE i.item.itemId=:itemId")
-    Optional<ItemDetail> findByItemId(@Param("itemId")Long ItemId);
+    Optional<ItemDetail> findByItemId(@Param("itemId") Long ItemId);
 }

@@ -44,18 +44,4 @@ public class ItemSearchController {
         return ResponseDto.ok(
             itemSearchService.searchItemList(keyword, category, tradingMethod, region, status, pageable));
     }
-
-    /**
-     * 물품 상세정보 조회 api
-     */
-    @GetMapping("/auction/{itemId}")
-    public ResponseEntity<NormalResponse> getItemDetail(@PathVariable Long itemId) {
-        ItemDetailRequestDto itemDetail = itemService.getItemDetail(itemId);
-        String message = "아이템 상세 정보를 성공적으로 가져왔습니다";
-        String status = "success";
-        NormalResponse response = new NormalResponse(status, message, itemDetail);
-        return ResponseEntity.ok(response);
-    }
-
-
 }

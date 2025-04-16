@@ -1,6 +1,7 @@
 package com.kcs3.auction.controller;
 
 import com.kcs3.auction.dto.ItemCreateRequestDto;
+import com.kcs3.auction.dto.ItemDetailResponseDto;
 import com.kcs3.auction.dto.ResponseDto;
 import com.kcs3.auction.service.ItemService;
 import java.util.List;
@@ -29,5 +30,11 @@ public class ItemController {
     ) {
         itemService.createAuctionItem(requestDto, images);
         return ResponseDto.ok("물품 등록을 성공하였습니다.");
+    }
+
+    // 물품 상세정보 조회
+    @GetMapping("/{itemId}")
+    public ResponseDto<ItemDetailResponseDto> getItemDetail(@PathVariable("itemid") Long itemid) {
+        return ResponseDto.ok(itemService.loadItemDetail(itemid));
     }
 }
