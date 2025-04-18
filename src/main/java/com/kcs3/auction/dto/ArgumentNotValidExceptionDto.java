@@ -11,23 +11,28 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @Getter
 public class ArgumentNotValidExceptionDto extends ExceptionDto {
+
     private final Map<String, String> errorFields;
 
-    public ArgumentNotValidExceptionDto(final MethodArgumentNotValidException methodArgumentNotValidException) {
+    public ArgumentNotValidExceptionDto(
+        final MethodArgumentNotValidException methodArgumentNotValidException) {
         super(ErrorCode.INVALID_ARGUMENT);
 
         this.errorFields = new HashMap<>();
         methodArgumentNotValidException.getBindingResult()
-                .getAllErrors().forEach(e -> this.errorFields.put(((FieldError) e).getField(), e.getDefaultMessage()));
+            .getAllErrors()
+            .forEach(e -> this.errorFields.put(((FieldError) e).getField(), e.getDefaultMessage()));
     }
 
-    public ArgumentNotValidExceptionDto(final ConstraintViolationException constraintViolationException) {
+    public ArgumentNotValidExceptionDto(
+        final ConstraintViolationException constraintViolationException) {
         super(ErrorCode.INVALID_ARGUMENT);
 
         this.errorFields = new HashMap<>();
 
         for (ConstraintViolation<?> constraintViolation : constraintViolationException.getConstraintViolations()) {
-            errorFields.put(constraintViolation.getPropertyPath().toString(), constraintViolation.getMessage());
+            errorFields.put(constraintViolation.getPropertyPath().toString(),
+                constraintViolation.getMessage());
         }
     }
 }
