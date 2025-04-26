@@ -73,7 +73,7 @@ public class Item extends BaseEntity {
     }
 
     // === Add & Update ===
-    public void endAuction() {
+    public void updateAuctionStatus() {
         this.isAuctionComplete = true;
     }
 }
