@@ -39,8 +39,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String refreshToken = jwtUtil.createJwt("refresh", userId, email, 86400000L);
 
         String redirectUrl =
-            frontendUrl + "/login-success?access=Bearer " + accessToken + "&id=" + userId + "&username="
-                + encodedNickname;
+            frontendUrl + "/login-success?access=Bearer " + accessToken
+                + "&id=" + userId + "&username=" + encodedNickname;
 
         response.setStatus(HttpStatus.OK.value());
 

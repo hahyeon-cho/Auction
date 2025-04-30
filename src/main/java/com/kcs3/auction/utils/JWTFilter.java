@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(
         HttpServletRequest request,
@@ -41,10 +42,10 @@ public class JWTFilter extends OncePerRequestFilter {
         Long userId = jwtUtil.getUserId(originToken);
         String email = jwtUtil.getEmail(originToken);
 
-        CustomOAuth2User customOAuth2User =new CustomOAuth2User(UserDto.builder()
-                .userId(userId)
-                .email(email)
-                .build()
+        CustomOAuth2User customOAuth2User = new CustomOAuth2User(UserDto.builder()
+            .userId(userId)
+            .email(email)
+            .build()
         );
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(

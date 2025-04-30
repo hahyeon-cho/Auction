@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
  * 인증된 사용자가 특정 물품을 찜하거나 찜을 취소할 수 있습니다. <p>
  *
  * <pre>
- * POST    /api/v1/auth/auction/{itemid}/like   -물품 찜 등록
- * DELETE  /api/v1/auth/auction/{itemid}/like   -물품 찜 취소
+ * POST    /api/v1/auth/auction/{itemid}/like   : 물품 찜 등록
+ * DELETE  /api/v1/auth/auction/{itemid}/like   : 물품 찜 취소
  * </pre>
  */
 @RestController

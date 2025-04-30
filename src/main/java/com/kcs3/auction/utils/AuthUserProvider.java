@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * 인증된 사용자 정보를 제공하는 컴포넌트입니다.
  * <p>
- * JWTFilter에 의해 SecurityContext에 저장된 인증 객체(Authentication)로부터 사용자 ID를 추출하고, 실제 DB에서 최신 사용자 정보를
- * 조회합니다.
+ * JWTFilter에 의해 SecurityContext에 저장된 인증 객체(Authentication)로부터 사용자 ID를 추출하고, 실제 DB에서 최신 사용자 정보를 조회합니다.
  * <p>
  * 사용 예: User currentUser = authUserProvider.getCurrentUser();
  * <pre>
