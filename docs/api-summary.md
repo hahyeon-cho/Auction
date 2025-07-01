@@ -124,14 +124,14 @@ res body
 ## 찜
 ### 찜 추가
 POST /auth/auction/{itemid}/like
-```Json
+```
 req body
 // Void (요청 본문 필요 없음)
 ```
 
 ### 찜 제거
 DELETE /auth/auction/{itemid}/like
-```Json
+```
 req body
 // Void (요청 본문 필요 없음)
 ```
@@ -148,7 +148,7 @@ req body
   
 ### 문의글 삭제
 DELETE /auth/auction/{itemId}/question/{questionId}
-```Json
+```
 req body
 // Void (요청 본문 필요 없음)
 ```
@@ -164,7 +164,7 @@ req body
   
 ### 문의답글 삭제
 DELETE /auth/auction/{itemId}/qna/{questionId}/{answerId}
-```Json
+```
 req body
 // Void (요청 본문 필요 없음)
 ```
@@ -198,21 +198,21 @@ req body
 
 ### 등록한 물품 목록 조회
 GET /auth/mypage/auction
-```Json
+```
 res body
 // 응답 형식은 '찜한 물품 목록 조회' API와 동일합니다.
 ```
 
 ### 입찰 참여한 물품 목록 조회
 GET /auth/mypage/bid
-```Json
+```
 res body
 // 응답 형식은 '찜한 물품 목록 조회' API와 동일합니다.
 ```
 
 ### 사용자가 낙찰한 물품 목록 조회
 GET /auth/mypage/award
-```Json
+```
 res body
 // 응답 형식은 '찜한 물품 목록 조회' API와 동일합니다.
 ```
