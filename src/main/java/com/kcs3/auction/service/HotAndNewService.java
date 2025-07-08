@@ -1,7 +1,7 @@
 package com.kcs3.auction.service;
 
-import com.kcs3.auction.dto.RedisItemDto;
-import com.kcs3.auction.dto.RedisItemListDto;
+import com.kcs3.auction.dto.HotAndNewItemDto;
+import com.kcs3.auction.dto.HotAndNewItemListDto;
 import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
@@ -33,23 +33,23 @@ public class HotAndNewService {
     private final AuctionProgressItemRepository progressItemRepository;
     private final RegionRepository regionRepository;
 
-    private final RedisTemplate<String, RedisItemDto> redisTemplate;
+    private final RedisTemplate<String, HotAndNewItemDto> redisTemplate;
 
     private static final Pageable CACHE_ITEM_PAGEABLE = PageRequest.of(0, 10);
 
     // === Hot & New 물품 리스트 조회 ===
     // Redis 캐시 데이터 조회
-    private List<RedisItemDto> getItemsFromRedis(String prefix, Long regionId) {
+    private List<HotAndNewItemDto> getItemsFromRedis(String prefix, Long regionId) {
         String key = prefix + regionId;
         try {
-            List<RedisItemDto> result = redisTemplate.opsForList().range(key, 0, -1);
+            List<HotAndNewItemDto> result = redisTemplate.opsForList().range(key, 0, -1);
             if (result == null) {
                 return Collections.emptyList();
             }
 
             return result.stream()
-                .filter(RedisItemDto.class::isInstance)
-                .map(RedisItemDto.class::cast)
+                .filter(HotAndNewItemDto.class::isInstance)
+                .map(HotAndNewItemDto.class::cast)
                 .collect(Collectors.toList());
 
         } catch (RedisConnectionFailureException | RedisSystemException e) {
@@ -58,12 +58,12 @@ public class HotAndNewService {
         }
     }
 
-    // Hot 아이템 목록 Redis 조회
-    public RedisItemListDto getHotItemsByRegion(String regionName) {
+    // Hot 물품 목록 Redis 조회
+    public HotAndNewItemListDto getHotItemsByRegion(String regionName) {
         Long regionId = Optional.ofNullable(regionRepository.findIdByRegionName(regionName))
             .orElse(1L);
 
-        List<RedisItemDto> items = getItemsFromRedis("hot_items:", regionId);
+        List<HotAndNewItemDto> items = getItemsFromRedis("hot_items:", regionId);
 
         if (items.isEmpty() && regionId != 1L) {
             items = getItemsFromRedis("hot_items:", 1L);  // fallback
@@ -73,17 +73,15 @@ public class HotAndNewService {
             throw new CommonException(ErrorCode.ITEM_CACHE_NOT_FOUND);
         }
 
-        return RedisItemListDto.builder()
-            .redisItemDtos(items)
-            .build();
+        return HotAndNewItemListDto.of(items);
     }
 
-    // New 아이템 목록 Redis 조회
-    public RedisItemListDto getNewItemsByRegion(String regionName) {
+    // New 물품 목록 Redis 조회
+    public HotAndNewItemListDto getNewItemsByRegion(String regionName) {
         Long regionId = Optional.ofNullable(regionRepository.findIdByRegionName(regionName))
             .orElse(1L);
 
-        List<RedisItemDto> items = getItemsFromRedis("new_item:", regionId);
+        List<HotAndNewItemDto> items = getItemsFromRedis("new_item:", regionId);
 
         if (items.isEmpty() && regionId != 1L) {
             items = getItemsFromRedis("new_item:", 1L);  // fallback
@@ -93,44 +91,42 @@ public class HotAndNewService {
             throw new CommonException(ErrorCode.ITEM_CACHE_NOT_FOUND);
         }
 
-        return RedisItemListDto.builder()
-            .redisItemDtos(items)
-            .build();
+        return HotAndNewItemListDto.of(items);
     }
 
     // === Hot & New 물품 리스트 캐싱 ===
     // 지역별 인기 물품 리스트를 Redis 캐시에 저장
     public void cacheHotItemsByRegion(Long regionId) {
-        // 최근 인기 아이템 itemId 리스트 조회
+        // 최근 인기 물품 itemId 리스트 조회
         List<Long> hotItemIds = auctionInfoRepository.findPopularProgressItemIdsByRegion(regionId, CACHE_ITEM_PAGEABLE);
 
         List<AuctionProgressItem> hotItems = progressItemRepository.findAllWithItemAndCategory(hotItemIds);
 
-        List<RedisItemDto> redisItemDtos = hotItems.stream()
-            .map(RedisItemDto::from)
+        List<HotAndNewItemDto> hotAndNewItemDtos = hotItems.stream()
+            .map(HotAndNewItemDto::from)
             .collect(Collectors.toList());
 
         // Redis 저장 (기존 리스트 삭제 후 갱신)
         String redisKey = "hot_items:" + regionId;
         redisTemplate.delete(redisKey);
-        redisTemplate.opsForList().leftPushAll(redisKey, redisItemDtos);
+        redisTemplate.opsForList().leftPushAll(redisKey, hotAndNewItemDtos);
     }
 
     // 지역별 신규 물품 리스트를 Redis 캐시에 저장
     public void cacheNewItemsByRegion(Long regionId) {
-        // 신규 아이템 itemId 리스트 조회
+        // 신규 물품 itemId 리스트 조회
         List<Long> newItemIds = itemRepository.findLatestInProgressItemIdsByRegion(regionId,CACHE_ITEM_PAGEABLE);
 
         List<AuctionProgressItem> newItems = progressItemRepository.findAllWithItemAndCategory(newItemIds);
 
-        List<RedisItemDto> redisItemDtos = newItems.stream()
-            .map(RedisItemDto::from)
+        List<HotAndNewItemDto> hotAndNewItemDtos = newItems.stream()
+            .map(HotAndNewItemDto::from)
             .collect(Collectors.toList());
 
         // Redis 저장 (기존 리스트 삭제 후 갱신)
         String redisKey = "new_items:" + regionId;
         redisTemplate.delete(redisKey);
-        redisTemplate.opsForList().leftPushAll(redisKey, redisItemDtos);
+        redisTemplate.opsForList().leftPushAll(redisKey, hotAndNewItemDtos);
     }
 
     // [Todo]: TTL 적용 검토

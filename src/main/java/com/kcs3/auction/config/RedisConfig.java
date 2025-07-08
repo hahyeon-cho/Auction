@@ -1,6 +1,6 @@
 package com.kcs3.auction.config;
 
-import com.kcs3.auction.dto.RedisItemDto;
+import com.kcs3.auction.dto.HotAndNewItemDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,8 +29,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, RedisItemDto> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, RedisItemDto> template = new RedisTemplate<>();
+    public RedisTemplate<String, HotAndNewItemDto> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, HotAndNewItemDto> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         // 키는 문자열로 저장

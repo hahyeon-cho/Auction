@@ -1,6 +1,6 @@
 package com.kcs3.auction.controller;
 
-import com.kcs3.auction.dto.RedisItemListDto;
+import com.kcs3.auction.dto.HotAndNewItemListDto;
 import com.kcs3.auction.dto.ResponseDto;
 import com.kcs3.auction.service.HotAndNewService;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,13 @@ public class HotAndNewController {
 
     // Redis에서 Hot Item 목록 조회
     @GetMapping("/hot-item")
-    public ResponseDto<RedisItemListDto> getHotAuctionItems(@RequestParam(required = false) String regionName) {
+    public ResponseDto<HotAndNewItemListDto> getHotAuctionItems(@RequestParam(required = false) String regionName) {
         return ResponseDto.ok(hotAndNewService.getHotItemsByRegion(regionName));
     }
 
     // Redis에서 New Item 목록 조회
     @GetMapping("/new-item")
-    public ResponseDto<RedisItemListDto> getNewAuctionItems(@RequestParam(required = false) String regionName) {
+    public ResponseDto<HotAndNewItemListDto> getNewAuctionItems(@RequestParam(required = false) String regionName) {
         return ResponseDto.ok(hotAndNewService.getNewItemsByRegion(regionName));
     }
 }
