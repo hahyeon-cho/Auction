@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <pre>
  * [문의글 관련]
- * - POST    /api/v1/auth/auction/{itemId}/question             : 문의글 등록
- * - DELETE  /api/v1/auth/auction/{itemId}/question/{questionId} : 문의글 삭제
+ * - POST    /auth/auction/{itemId}/question             : 문의글 등록
+ * - DELETE  /auth/auction/{itemId}/question/{questionId} : 문의글 삭제
  *
  * [답글 관련]
- * - POST    /api/v1/auth/auction/{itemId}/qna/{questionId}            : 문의 답글 등록
- * - DELETE  /api/v1/auth/auction/{itemId}/qna/{questionId}/{answerId} : 문의 답글 삭제
+ * - POST    /auth/auction/{itemId}/qna/{questionId}            : 문의 답글 등록
+ * - DELETE  /auth/auction/{itemId}/qna/{questionId}/{answerId} : 문의 답글 삭제
  * </pre>
  */
 @RestController

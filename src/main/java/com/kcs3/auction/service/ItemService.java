@@ -52,7 +52,7 @@ public class ItemService {
     private String s3Bucket;
 
     private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard()
-        .withRegion(Regions.AP_NORTHEAST_2) // 서울
+        .withRegion(Regions.AP_NORTHEAST_2)
         .build();
 
     private final AuthUserProvider authUserProvider;
@@ -60,7 +60,6 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final AuctionProgressItemRepository auctionProgressItemRepository;
     private final AuctionCompleteItemRepository auctionCompleteItemRepository;
-
     private final CategoryRepository categoryRepository;
     private final TradingMethodRepository tradingMethodRepository;
     private final RegionRepository regionRepository;
@@ -122,8 +121,6 @@ public class ItemService {
             .item(item)
             .itemTitle(requestDto.getTitle())
             .thumbnail(imageUrls.get(0))
-
-            // 생각난건데 여기서 전체 지역정보 예:서울시 구로구 저장하고 지역코드는 서울시 정도였다는것을...
             .location(region.getRegionName())
             .bidFinishTime(requestDto.getFinishTime())
             .buyNowPrice(requestDto.getBuyNowPrice())
@@ -188,7 +185,7 @@ public class ItemService {
         List<ItemQuestion> itemQuestions = itemDetail.getQnas();
 
         // --- 매핑 ---
-        // 아이템 경매 관련 정보 매핑 (경매 중 테이블 or 경매 완료 테이블)
+        // 물품 경매 관련 정보 매핑 (경매 중 테이블 or 경매 완료 테이블)
         AuctionSummaryDto auctionSummaryDto = loadAuctionSummary(item.getItemId(), item.isAuctionComplete());
 
         // 이미지 url 정보 Dto 매핑

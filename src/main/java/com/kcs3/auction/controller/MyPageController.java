@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <pre>
  * endpoints:
- * - GET  /like    : 사용자가 좋아요한 물품 목록 조회
- * - GET  /auction : 사용자가 등록한 경매 물품 목록 조회
- * - GET  /bid     : 사용자가 입찰에 참여한 목록 조회
- * - GET  /award   : 사용자가 낙찰받은 물품 목록 조회
+ * - GET  /auth/mypage/like    : 사용자가 좋아요한 물품 목록 조회
+ * - GET  /auth/mypage/auction : 사용자가 등록한 경매 물품 목록 조회
+ * - GET  /auth/mypage/bid     : 사용자가 입찰에 참여한 목록 조회
+ * - GET  /auth/mypage/award   : 사용자가 낙찰받은 물품 목록 조회
  * </pre>
  */
 @RestController

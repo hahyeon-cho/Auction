@@ -10,14 +10,14 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface AuctionCompleteItemRepository extends JpaRepository<AuctionCompleteItem, Long> {
 
-    // 사용자 ID 기준으로 사용자가 낙찰한 아이템 ID 목록 조회 (최신순)
+    // 사용자 ID 기준으로 사용자가 낙찰한 물품 ID 목록 조회 (최신순)
     @Query("SELECT aci.item.itemId FROM AuctionCompleteItem aci WHERE aci.userId = :userId ORDER BY aci.createdAt DESC")
     Slice<Long> findItemIdsByUserId(Long userId, Pageable pageable);
 
     // 특정 물품에 관한 경매 완료 테이블 정보 조회
     Optional<AuctionCompleteItem> findCompleteItemByItem(Item item);
 
-    // 아이템 ID에 대한 경매 완료 물품 정보 조회
+    // 물품 ID에 대한 경매 완료 물품 정보 조회
     Optional<AuctionCompleteItem> findByItemItemId(Long itemId);
 
 }

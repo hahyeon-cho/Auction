@@ -13,11 +13,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    // 아이템 ID로 판매자 ID 조회
+    // 물품 ID로 판매자 ID 조회
     @Query("SELECT i.seller.userId FROM Item i WHERE i.itemId = :itemId")
     Long findSellerIdByItemId(@Param("itemId") Long itemId);
 
-    // 필터 조건(카테고리, 거래방식, 지역, 경매상태 등)으로 경매 아이템 목록 조회
+    // 필터 조건(카테고리, 거래방식, 지역, 경매상태 등)으로 경매 물품 목록 조회
     // 경매 상태에 따라 경매 중 테이블/경매 완료 테이블 선택 조인
     // [TODO] 쿼리 재사용성을 위해 공통 조회 구조 유지 중. 성능이슈 또는 조건 복잡도 증가 시 분리 또는 QueryDSL 리팩토링 고려
     @Query(value = """
