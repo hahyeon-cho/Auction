@@ -54,7 +54,7 @@ public enum ErrorCode {
     ITEM_QUESTION_NOT_FOUND(40410, HttpStatus.NOT_FOUND, "해당 문의글 정보를 찾을 수 없습니다."),
     ITEM_ANSWER_NOT_FOUND(40411, HttpStatus.NOT_FOUND, "해당 답글 정보를 찾을 수 없습니다."),
     ITEM_CACHE_NOT_FOUND(40412, HttpStatus.NOT_FOUND, "캐시에 저장된 경매 물품 리스트를 찾을 수 없습니다."),
-    AUCTION_PRICE_NOT_FOUND(404013, HttpStatus.NOT_FOUND, "경매 가격 정보를 찾을 수 없습니다."),
+    AUCTION_PRICE_NOT_FOUND(40413, HttpStatus.NOT_FOUND, "경매 가격 정보를 찾을 수 없습니다."),
 
     // 405 - Method Not Allowed
     METHOD_NOT_ALLOWED(40500, HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메소드입니다."),
@@ -65,13 +65,17 @@ public enum ErrorCode {
     // 500 - Internal Server Error
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러입니다."),
     FILE_UPLOAD_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패하였습니다."),
-    REDIS_CONNECTION_FAILED(50301, HttpStatus.SERVICE_UNAVAILABLE, "레디스 서버에 연결할 수 없습니다."),
-    EMBEDDING_SAVE_FAILED(50002, HttpStatus.INTERNAL_SERVER_ERROR, "임베딩 값을 저장하는 중 오류가 발생하였습니다."),
-    EMBEDDING_API_FAILED(50003, HttpStatus.INTERNAL_SERVER_ERROR, "대표 임베딩을 생성하는 외부 API 호출 중 오류가 발생하였습니다."),
-    RECOMMENDATION_FAILED(50004, HttpStatus.INTERNAL_SERVER_ERROR, "추천 서버 통신에 실패했습니다.");
+    SEARCH_EMBEDDING_FAILED(50002, HttpStatus.INTERNAL_SERVER_ERROR, "OpenAI 임베딩 요청에 실패하였습니다."),
+    ITEM_ELASTIC_SAVE_FAILED(50003, HttpStatus.INTERNAL_SERVER_ERROR, "물품 정보를 엘라스틱서치에 저장하던 중 오류가 발생하였습니다."),
+    RECOMMEND_EMBEDDING_SAVE_FAILED(50004, HttpStatus.INTERNAL_SERVER_ERROR, "임베딩 값을 저장하는 중 오류가 발생하였습니다."),
+    RECOMMEND_EMBEDDING_FAILED(50005, HttpStatus.INTERNAL_SERVER_ERROR, "대표 임베딩을 생성하는 외부 API 호출 중 오류가 발생하였습니다."),
+    RECOMMENDATION_FAILED(50006, HttpStatus.INTERNAL_SERVER_ERROR, "추천 서버 통신에 실패했습니다."),
+
+    // 503 - Service Unavailable
+    REDIS_CONNECTION_FAILED(50301, HttpStatus.SERVICE_UNAVAILABLE, "레디스 서버에 연결할 수 없습니다.");
+
 
     private final Integer code;
     private final HttpStatus httpStatus;
     private final String message;
 }
-
