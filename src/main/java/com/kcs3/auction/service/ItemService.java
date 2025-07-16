@@ -139,7 +139,7 @@ public class ItemService {
             .createdAt(item.getCreatedAt())
             .build());
 
-        // 임베딩 값 저장
+        // 추천 서비스 임베딩 값 저장
         try {
             itemRecommendationService.storeEmbeddingAfterItemRegister(
                 item,
@@ -149,8 +149,8 @@ public class ItemService {
                 requestDto.getContents()
             );
         } catch (JsonProcessingException e) {
-            throw new CommonException(ErrorCode.EMBEDDING_API_FAILED);
-        } catch (CommonException e) {
+            throw new CommonException(ErrorCode.RECOMMEND_EMBEDDING_SAVE_FAILED);
+        } catch (Exception e) {
             log.warn("임베딩 저장 실패: {}", e.getMessage());
         }
     }
