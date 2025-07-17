@@ -4,13 +4,25 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 @Document(indexName = "items")
 @Builder
-public record ItemDocument(
-    @Id Long itemId,
-    String itemTitle,
-    LocalDateTime createdAt
-) {
+public class ItemDocument{
+    @Id
+    private Long itemId;
 
+    private String itemTitle;
+    private Long categoryId;
+    private Long regionId;
+    private Long tradingMethodId;
+    private Boolean isAuctionComplete;
+    private LocalDateTime createdAt;
+
+    @Field(type = FieldType.Dense_Vector, dims = 1536)
+    private float[] embedding;
+
+    @Field(type = FieldType.Text, analyzer = "korean")
+    private String searchText;
 }
