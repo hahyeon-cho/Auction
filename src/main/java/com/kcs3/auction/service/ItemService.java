@@ -34,7 +34,6 @@ import com.kcs3.auction.utils.AuthUserProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +64,8 @@ public class ItemService {
     private final RegionRepository regionRepository;
 
     private final ItemQuestionService questionService;
+
+    private final SearchEmbeddingService searchEmbeddingService;
     private final ItemElasticsearchRepository itemElasticsearchRepository;
     private final RecommendService itemRecommendationService;
 
@@ -133,11 +134,12 @@ public class ItemService {
         auctionProgressItemRepository.save(auctionProgressItem);
 
         // 엘라스틱 서치 저장
-        itemElasticsearchRepository.save(ItemDocument.builder()
-            .itemTitle(requestDto.getTitle())
-            .itemId(item.getItemId())
-            .createdAt(item.getCreatedAt())
-            .build());
+        try {
+            ItemDocument itemDocument = buildItemDocument(requestDto, item, category, region, tradingMethod);
+            itemElasticsearchRepository.save(itemDocument);
+        } catch (Exception e) {
+            throw new CommonException(ErrorCode.ITEM_ELASTIC_SAVE_FAILED);
+        }
 
         // 추천 서비스 임베딩 값 저장
         try {
@@ -171,6 +173,40 @@ public class ItemService {
         }
 
         return urls;
+    }
+
+    private ItemDocument buildItemDocument(
+        ItemCreateRequestDto requestDto,
+        Item item,
+        Category category,
+        Region region,
+        TradingMethod tradingMethod
+    ) {
+        String searchText = String.join(" ",
+            requestDto.getTitle(),
+            category.getCategoryName(),
+            requestDto.getContents() != null ? requestDto.getContents() : ""
+        ).trim();
+
+        // 임베딩 생성
+        try {
+            float[] embedding = searchEmbeddingService.createEmbedding(searchText);
+
+            return ItemDocument.builder()
+                .itemId(item.getItemId())
+                .itemTitle(requestDto.getTitle())
+                .categoryId(category.getCategoryId())
+                .regionId(region.getRegionId())
+                .tradingMethodId(tradingMethod.getTradingMethodId())
+                .isAuctionComplete(false)
+                .createdAt(item.getCreatedAt())
+                .searchText(searchText)
+                .embedding(embedding)
+                .build();
+        } catch (Exception e) {
+            log.error("검색용 임베딩 생성 실패 - 상품ID: {}, 텍스트: {}", item.getItemId(), searchText, e);
+            throw new CommonException(ErrorCode.SEARCH_EMBEDDING_FAILED);
+        }
     }
 
     // === 물품 상세 정보 조회 ===
