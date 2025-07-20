@@ -67,6 +67,37 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
         Pageable pageable
     );
 
+    // 지정된 ID 리스트 순서를 유지하여 경매 물품 목록 조회
+    @Query(value = """
+           SELECT new com.example.dto.ItemPreviewDto(
+               i.id,
+               COALESCE(api.itemTitle, aci.itemTitle),
+               COALESCE(api.thumbnail, aci.thumbnail),
+               c.categoryName,
+               tm.tmCode,
+               COALESCE(api.location, aci.location),
+               COALESCE(api.startPrice, aci.startPrice),
+               COALESCE(api.buyNowPirce, aci.buyNowPirce),
+               COALESCE(api.maxPrice, aci.maxPrice),
+               COALESCE(api.bidFinishTime, aci.bidFinishTime),
+               i.isAuctionComplete,
+               aci.isBidComplete
+           )
+            FROM Item i
+            JOIN i.category c
+            JOIN i.tradeMethod tm
+            LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
+            LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
+            WHERE i.itemId IN :itemIdList
+            AND (:isAuctionComplete IS NULL OR i.isAuctionComplete = :isAuctionComplete)
+            ORDER BY FIELD(i.itemId, :itemIdList)
+        """)
+    Slice<ItemPreviewDto> fetchItemPreviewsByItemIdOrder(
+        @Param("itemIdList") List<Long> itemIdList,
+        @Param("isAuctionComplete") Boolean isAuctionComplete,
+        Pageable pageable
+    );
+
     // 지역별 신규 물품 ID 목록 조회
     @Query("""
         SELECT i.itemId
