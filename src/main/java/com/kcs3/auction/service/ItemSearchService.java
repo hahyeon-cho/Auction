@@ -66,9 +66,7 @@ public class ItemSearchService {
             }
         }
 
-        List<Long> itemIdList = (keyword != null && !keyword.isBlank())
-            ? searchItemsByKeyword(keyword, pageable)
-            : null;
+        List<Long> itemIdList = null;
 
         return itemRepository.fetchItemPreviewsByFilters(
             itemIdList,        // itemIdList
@@ -81,28 +79,48 @@ public class ItemSearchService {
         );
     }
 
-    // 엘라스틱 서치에 접근하여 키워드 검색
-    private List<Long> searchItemsByKeyword(String keyword, Pageable pageable) {
-        Query query = NativeQuery.builder()
-            .withQuery(q -> q
-                .multiMatch(m -> m
-                    .fields(List.of("itemTitle"))
-                    .query(keyword)
-                    .fuzziness("AUTO") // 모호한 검색 허용
-                    .operator(Operator.And) // 검색 단어가 모두 포함
-                )
+    // Elasticsearch(키워드) 검색
+    private List<Long> searchItemsKeywordOnly(String keyword, SearchFilterDto filters, Pageable pageable) {
+        BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
+
+        // 키워드 검색 (multi_match)
+        boolBuilder.must(m -> m
+            .multiMatch(mm -> mm
+                .fields(List.of("itemTitle", "searchText"))
+                .query(keyword)
+                .fuzziness("AUTO")
+                .operator(Operator.And)
             )
-            .withSort(Sort.by(Sort.Direction.DESC, "createdAt"))
-            .withPageable(pageable)
+        );
+
+        // 조건부 필터 추가
+        applyKeywordSearchFilters(boolBuilder, filters);
+
+        NativeQuery query = NativeQuery.builder()
+            .withQuery(boolBuilder.build()._toQuery())
+            .withSort(Sort.by(Sort.Direction.DESC, "_score", "createdAt")) // 관련도 -> 최신순
+            .withPageable(PageRequest.of(0, pageable.getPageSize() * 2))
             .build();
 
-        SearchHits<ItemSearchDocument> searchHits = elasticsearchOperations.search(query,
-            ItemSearchDocument.class);
+        SearchHits<ItemSearchDocument> searchHits = elasticsearchOperations.search(query, ItemSearchDocument.class);
 
-        List<Long> itemIds = searchHits.getSearchHits().stream()
-            .map(hit -> hit.getContent().itemId())
-            .toList();
+        return searchHits.getSearchHits().stream()
+            .map(hit -> hit.getContent().getItemId())
+            .collect(Collectors.toList());
+    }
 
-        return itemIds;
+    private void applyKeywordSearchFilters(BoolQuery.Builder boolBuilder, SearchFilterDto filters) {
+        if (filters.categoryId() != null) {
+            boolBuilder.filter(f -> f.term(t -> t.field("categoryId").value(filters.categoryId())));
+        }
+        if (filters.regionId() != null) {
+            boolBuilder.filter(f -> f.term(t -> t.field("regionId").value(filters.regionId())));
+        }
+        if (filters.tradingMethodId() != null) {
+            boolBuilder.filter(f -> f.term(t -> t.field("tradingMethodId").value(filters.tradingMethodId())));
+        }
+        if (filters.isAuctionComplete() != null) {
+            boolBuilder.filter(f -> f.term(t -> t.field("isAuctionComplete").value(filters.isAuctionComplete())));
+        }
     }
 }
