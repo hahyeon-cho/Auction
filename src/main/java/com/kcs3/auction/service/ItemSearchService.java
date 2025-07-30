@@ -59,26 +59,19 @@ public class ItemSearchService {
     ) {
         Long categoryId = null;
         if (categoryName != null) {
-            categoryId = categoryRepository.findIdByCategory(categoryName);
-            if (categoryId == null) {
-                throw new CommonException(ErrorCode.CATEGORY_NOT_FOUND);
-            }
+            categoryId = getCategoryIdOrThrow(categoryName);
         }
 
         Long tradingMethodId = null;
         if (tradingMethodCode != null) {
-            tradingMethodId = tradingMethodRepository.findIdByTradingMethod(tradingMethodCode);
-            if (tradingMethodId == null) {
-                throw new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND);
-            }
+            tradingMethodId = getTradingMethodIdOrThrow(tradingMethodCode);
         }
 
         Long regionId = null;
         if (regionName != null) {
-            regionId = regionRepository.findIdByRegionName(regionName);
-            if (regionId == null) {
-                throw new CommonException(ErrorCode.DEFAULT_REGION_NOT_FOUND);
-            }
+            regionId = getRegionIdOrThrow(regionName);
+        }
+
         }
 
         List<Long> itemIdList = null;
@@ -92,6 +85,30 @@ public class ItemSearchService {
             status,            // isAuctionComplete
             pageable
         );
+    }
+
+    private Long getCategoryIdOrThrow(String categoryName) {
+        Long id = categoryRepository.findIdByCategory(categoryName);
+        if (id == null) {
+            throw new CommonException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+        return id;
+    }
+
+    private Long getTradingMethodIdOrThrow(Integer tradingMethodCode) {
+        Long id = tradingMethodRepository.findIdByTradingMethod(tradingMethodCode);
+        if (id == null) {
+            throw new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND);
+        }
+        return id;
+    }
+
+    private Long getRegionIdOrThrow(String regionName) {
+        Long id = regionRepository.findIdByRegionName(regionName);
+        if (id == null) {
+            throw new CommonException(ErrorCode.DEFAULT_REGION_NOT_FOUND);
+        }
+        return id;
     }
 
     // Elasticsearch(벡터 + 키워드) 검색
