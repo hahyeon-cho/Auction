@@ -23,6 +23,7 @@
  import java.util.List;
  import java.util.stream.Collectors;
  import lombok.RequiredArgsConstructor;
+ import lombok.extern.log4j.Log4j2;
  import org.springframework.data.domain.PageRequest;
  import org.springframework.data.domain.Pageable;
  import org.springframework.data.domain.Slice;
@@ -35,6 +36,7 @@
  import org.springframework.transaction.annotation.Transactional;
  import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ItemSearchService {
@@ -44,6 +46,7 @@ public class ItemSearchService {
     private final TradingMethodRepository tradingMethodRepository;
     private final RegionRepository regionRepository;
 
+    private final SearchEmbeddingService searchEmbeddingService;
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
 
@@ -72,12 +75,45 @@ public class ItemSearchService {
             regionId = getRegionIdOrThrow(regionName);
         }
 
+        if (keyword != null && !keyword.isBlank()) {
+            return itemRepository.fetchItemPreviewsByFilters(
+                null,        // itemIdList
+                null,              // sellerId
+                categoryId,        // categoryId
+                tradingMethodId,   // tradingMethodId
+                regionId,          // regionId
+                status,            // isAuctionComplete
+                pageable
+            );
         }
 
-        List<Long> itemIdList = null;
+        List<Long> ids = null;
+        SearchFilterDto filters = SearchFilterDto.of(categoryId, regionId, tradingMethodId, status);
+
+        try {
+            float[] queryEmbedding = searchEmbeddingService.createEmbedding(keyword);
+            ids = searchItemsWithVector(queryEmbedding, keyword, filters, pageable);
+            return itemRepository.fetchItemPreviewsByItemIdOrder(ids, status, pageable);
+        } catch (WebClientResponseException e) {
+            log.error("OpenAI 임베딩 생성 실패: keyword={}, status={}, error={}", keyword, e.getStatusCode(), e.getMessage());
+        } catch (ElasticsearchException | IOException e) {
+            log.error("Elasticsearch 벡터 검색 실패: keyword={}, message={}", keyword, e.getMessage());
+        }
+
+        // fallback: 벡터 검색 실패 시 키워드 기반 검색 수행
+        // - OpenAI API 오류 또는 Elasticsearch kNN 오류 대응
+        try {
+            ids = searchItemsKeywordOnly(keyword, filters, pageable);
+            return itemRepository.fetchItemPreviewsByItemIdOrder(ids, status, pageable);
+        } catch (ElasticsearchException e) {
+            log.error("Elasticsearch 키워드 검색 실패: keyword={}, message={}", keyword, e.getMessage());
+        }
+        if (ids.isEmpty()) {
+            return new SliceImpl<>(Collections.emptyList(), pageable, false);
+        }
 
         return itemRepository.fetchItemPreviewsByFilters(
-            itemIdList,        // itemIdList
+            ids,        // itemIdList
             null,              // sellerId
             categoryId,        // categoryId
             tradingMethodId,   // tradingMethodId
