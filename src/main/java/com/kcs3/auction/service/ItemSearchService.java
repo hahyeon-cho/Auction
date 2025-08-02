@@ -108,6 +108,13 @@ public class ItemSearchService {
         } catch (ElasticsearchException e) {
             log.error("Elasticsearch 키워드 검색 실패: keyword={}, message={}", keyword, e.getMessage());
         }
+
+        // fallback: 키워드 기반 Like 검색 수행
+        // - LIKE '%키워드%' 검색은 인덱스를 활용할 수 없어 전체 테이블 스캔 발생
+        // - COALESCE + LIKE 조합은 모든 레코드에 대해 계산이 필요
+        // - 따라서) itemId 추출 -> 상세 정보 조회
+        ids = itemRepository.findItemIdsByKeyword(keyword, pageable);
+
         if (ids.isEmpty()) {
             return new SliceImpl<>(Collections.emptyList(), pageable, false);
         }
