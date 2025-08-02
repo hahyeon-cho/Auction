@@ -98,6 +98,20 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
         Pageable pageable
     );
 
+    // LIKE 검색을 통해 물품 ID 목록 조회
+    @Query("""
+        SELECT i.id
+        FROM Item i
+        LEFT JOIN AuctionProgressItem api ON i.isAuctionComplete = false AND api.item = i
+        LEFT JOIN AuctionCompleteItem aci ON i.isAuctionComplete = true AND aci.item = i
+        WHERE (COALESCE(api.itemTitle, aci.itemTitle) LIKE %:keyword%)
+        ORDER BY i.createdAt DESC
+    """)
+    List<Long> findItemIdsByKeyword(
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
+
     // 지역별 신규 물품 ID 목록 조회
     @Query("""
         SELECT i.itemId
