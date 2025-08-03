@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcs3.auction.dto.ItemEmbeddingRequestDto;
 import com.kcs3.auction.dto.ItemEmbeddingResponseDto;
+import com.kcs3.auction.entity.Item;
 import com.kcs3.auction.entity.Recommend;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
+import com.kcs3.auction.repository.ItemRepository;
 import com.kcs3.auction.repository.RecommendRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,7 @@ public class RecommendationService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
+    private final ItemRepository itemRepository;
     private final RecommendRepository recommendRepository;
 
     // 물품 임베딩 값 저장
@@ -55,8 +58,10 @@ public class RecommendationService {
             .bodyToMono(ItemEmbeddingResponseDto.class)
             .block();
 
+        Item itemRef = itemRepository.getReferenceById(itemId);
+
         Recommend recommend = Recommend.builder()
-            .itemId(itemId)
+            .item(itemRef)
             .titleEmbeddingVec(objectMapper.writeValueAsString(embeddingResponseDto.getTitleEmbedding()))
             .thumbnailEmbeddingVec(objectMapper.writeValueAsString(embeddingResponseDto.getThumbnailEmbedding()))
             .categoryEmbeddingVec(objectMapper.writeValueAsString(embeddingResponseDto.getCategoryEmbedding()))
@@ -74,11 +79,11 @@ public class RecommendationService {
             .block();
 
         if (result == null || !result.getStatusCode().is2xxSuccessful()) {
-            throw new CommonException(ErrorCode.EMBEDDING_SAVE_FAILED);
+            throw new CommonException(ErrorCode.RECOMMEND_EMBEDDING_SAVE_FAILED);
         }
 
         // 대표 임베딩 DB 저장
-        recommend.setRepresentEmbeddingVec(result.getBody());
+        recommend.updateRepresentEmbeddingVec(result.getBody());
         recommendRepository.save(recommend);
     }
 }

@@ -67,7 +67,7 @@ public class ItemService {
 
     private final SearchEmbeddingService searchEmbeddingService;
     private final ItemElasticsearchRepository itemElasticsearchRepository;
-    private final RecommendService itemRecommendationService;
+    private final RecommendationService itemRecommendationService;
 
     // === 물품 등록 서비스 ===
     @Transactional
@@ -144,7 +144,7 @@ public class ItemService {
         // 추천 서비스 임베딩 값 저장
         try {
             itemRecommendationService.storeEmbeddingAfterItemRegister(
-                item,
+                item.getItemId(),
                 requestDto.getTitle(),
                 imageUrls.get(0),
                 region.getRegionName(),
