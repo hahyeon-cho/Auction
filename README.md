@@ -52,7 +52,7 @@
 <br>
 
 **※ 물품 검색**  
-<img src="https://github.com/user-attachments/assets/596c3b44-dfc5-4771-bea4-c96e63d2342f" alt="Search Flow" width="68%" height="68%"/> 
+<img src="https://github.com/user-attachments/assets/596c3b44-dfc5-4771-bea4-c96e63d2342f" alt="Search Flow" width="35%" height="35%"/> 
 <br>
 <br>
 
