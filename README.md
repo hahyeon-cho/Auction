@@ -2,7 +2,7 @@
 
 ## 📎 관련 문서
 - [📄 물품 서비스 API 문서](./docs/api-summary.md)
-- <a href="https://hahyeon-cho.notion.site/NCNK-22fa0fd7145080bca394c7b19bfb3bad">
+- <a href="https://hahyeon-cho.notion.site/52panda-22fa0fd71450808a8b54e8a86253c989">
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" alt="Notion" width="18" height="18" style="vertical-align:middle;"/> 
   Notion 포트폴리오 </a>
 <br>
@@ -52,7 +52,7 @@
 <br>
 
 **※ 물품 검색**  
-<img src="https://github.com/user-attachments/assets/596c3b44-dfc5-4771-bea4-c96e63d2342f" alt="Search Flow" width="35%" height="35%"/> 
+<img src="https://github.com/user-attachments/assets/82f2b2d0-54b7-4f5a-ba6c-9c4767ca22a5" alt="Search Flow" width="35%" height="35%"/> 
 <br>
 <br>
 
