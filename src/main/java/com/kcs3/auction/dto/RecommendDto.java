@@ -1,15 +1,24 @@
 package com.kcs3.auction.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RecommendDto {
+
     private Long itemId;
     private String itemTitle;
     private String thumbnail;
     private Integer maxPrice;
+
+    @Builder
+    public RecommendDto(Long itemId, String itemTitle, String thumbnail, Integer maxPrice) {
+        this.itemId = itemId;
+        this.itemTitle = itemTitle;
+        this.thumbnail = thumbnail;
+        this.maxPrice = maxPrice;
+    }
 }
