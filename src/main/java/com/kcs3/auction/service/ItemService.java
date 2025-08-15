@@ -1,9 +1,5 @@
 package com.kcs3.auction.service;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kcs3.auction.document.ItemDocument;
 import com.kcs3.auction.dto.AuctionSummaryDto;
@@ -41,6 +37,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Service
@@ -50,9 +49,7 @@ public class ItemService {
     @Value("${aws.s3.bucket-name}")
     private String s3Bucket;
 
-    private final AmazonS3 amazonS3Client = AmazonS3ClientBuilder.standard()
-        .withRegion(Regions.AP_NORTHEAST_2)
-        .build();
+    private final S3Client s3Client;
 
     private final AuthUserProvider authUserProvider;
 
@@ -95,7 +92,8 @@ public class ItemService {
         List<String> imageUrls;
         try {
             imageUrls = uploadImagesAndGetUrls(images);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("이미지 파일 업로드 실패", e);
             throw new CommonException(ErrorCode.FILE_UPLOAD_FAILED);
         }
 
@@ -158,17 +156,30 @@ public class ItemService {
     }
 
     // S3Client에 이미지 저장 후 url 리스트 반환
-    private ArrayList<String> uploadImagesAndGetUrls(List<MultipartFile> images) throws IOException {
+    ArrayList<String> uploadImagesAndGetUrls(List<MultipartFile> images) throws IOException {
         ArrayList<String> urls = new ArrayList<>();
 
         for (MultipartFile img : images) {
             String fileName = img.getOriginalFilename();
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(img.getSize());
-            metadata.setContentType(img.getContentType());
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(s3Bucket)
+                .key(fileName)
+                .contentType(img.getContentType())
+                .contentLength(img.getSize())
+                .build();
 
-            amazonS3Client.putObject(s3Bucket, fileName, img.getInputStream(), metadata);
-            String imageUrl = amazonS3Client.getUrl(s3Bucket, fileName).toString();
+            s3Client.putObject(
+                putObjectRequest,
+                RequestBody.fromInputStream(img.getInputStream(), img.getSize())
+            );
+
+            String imageUrl = String.format(
+                "https://%s.s3.%s.amazonaws.com/%s",
+                s3Bucket,
+                s3Client.serviceClientConfiguration().region().id(),
+                fileName
+            );
+
             urls.add(imageUrl);
         }
 
