@@ -1,5 +1,6 @@
 package com.kcs3.auction.dto;
 
+import com.kcs3.auction.entity.ItemQuestion;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,5 +20,13 @@ public class ItemQuestionResponseDto {
         this.questionId = questionId;
         this.questionContents = questionContents;
         this.questionTime = questionTime;
+    }
+
+    public static ItemQuestionResponseDto from(ItemQuestion q) {
+        return ItemQuestionResponseDto.builder()
+            .questionId(q.getItemQuestionId())
+            .questionContents(q.getQuestionContent())
+            .questionTime(q.getCreatedAt())
+            .build();
     }
 }

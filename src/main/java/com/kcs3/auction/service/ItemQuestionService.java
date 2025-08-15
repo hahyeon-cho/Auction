@@ -1,10 +1,7 @@
 package com.kcs3.auction.service;
 
 import com.kcs3.auction.dto.ItemAnswerRequestDto;
-import com.kcs3.auction.dto.ItemAnswerResponseDto;
 import com.kcs3.auction.dto.ItemQuestionRequestDto;
-import com.kcs3.auction.dto.ItemQuestionResponseDto;
-import com.kcs3.auction.dto.QuestionWithAnswerDto;
 import com.kcs3.auction.entity.ItemAnswer;
 import com.kcs3.auction.entity.ItemDetail;
 import com.kcs3.auction.entity.ItemQuestion;
@@ -16,9 +13,6 @@ import com.kcs3.auction.repository.ItemDetailRepository;
 import com.kcs3.auction.repository.ItemQuestionRepository;
 import com.kcs3.auction.repository.ItemRepository;
 import com.kcs3.auction.utils.AuthUserProvider;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,36 +115,5 @@ public class ItemQuestionService {
 
         itemQuestion.getAnswers().remove(itemAnswer);
         itemAnswerRepository.delete(itemAnswer);
-    }
-
-    // ItemQuestion 목록을 QuestionWithAnswerDto 목록으로 변환
-    public static List<QuestionWithAnswerDto> convertToQnaDtos(List<ItemQuestion> questions) {
-        List<QuestionWithAnswerDto> qnaDtos = new ArrayList<>();
-
-        for (ItemQuestion q : questions) {
-            // 문의글 Dto 생성
-            ItemQuestionResponseDto questionDto = ItemQuestionResponseDto.builder()
-                .questionId(q.getItemQuestionId())
-                .questionContents(q.getQuestionContent())
-                .questionTime(q.getCreatedAt())
-                .build();
-
-            // 답글 Dto 리스트 생성
-            List<ItemAnswerResponseDto> answerDtos = q.getAnswers().stream()
-                .map(answer -> ItemAnswerResponseDto.builder()
-                    .answerId(answer.getItemAnswerId())
-                    .answerContent(answer.getAnswerContent())
-                    .answerTime(answer.getCreatedAt())
-                    .build())
-                .collect(Collectors.toList());
-
-            // 문의글과 답글을 묶어 최종 Dto 생성 및 반환 리스트에 추가
-            qnaDtos.add(QuestionWithAnswerDto.builder()
-                .question(questionDto)
-                .answers(answerDtos)
-                .build());
-        }
-
-        return qnaDtos;
     }
 }

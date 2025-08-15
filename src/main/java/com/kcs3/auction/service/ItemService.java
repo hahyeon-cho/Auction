@@ -13,7 +13,6 @@ import com.kcs3.auction.entity.Category;
 import com.kcs3.auction.entity.Item;
 import com.kcs3.auction.entity.ItemDetail;
 import com.kcs3.auction.entity.ItemImage;
-import com.kcs3.auction.entity.ItemQuestion;
 import com.kcs3.auction.entity.Region;
 import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.entity.User;
@@ -229,7 +228,6 @@ public class ItemService {
 
         User seller = item.getSeller();
         ItemDetail itemDetail = item.getItemDetail();
-        List<ItemQuestion> itemQuestions = itemDetail.getQnas();
 
         // --- 매핑 ---
         // 물품 경매 관련 정보 매핑 (경매 중 테이블 or 경매 완료 테이블)
@@ -243,9 +241,12 @@ public class ItemService {
             .collect(Collectors.toList());
 
         // 문의글 및 문의 답글 Dto 매핑
-        List<QuestionWithAnswerDto> qnaDtos = questionService.convertToQnaDtos(itemDetail.getQnas());
+        List<QuestionWithAnswerDto> qnaDtos =
+            itemDetail.getQnas().stream()
+                .map(QuestionWithAnswerDto::from)
+                .collect(Collectors.toList());
 
-        ItemDetailResponseDto responseDto = ItemDetailResponseDto.builder()
+        return ItemDetailResponseDto.builder()
             .itemId(item.getItemId())
             .isAuctionComplete(item.isAuctionComplete())
             .itemCreatedAt(item.getCreatedAt())
@@ -263,8 +264,6 @@ public class ItemService {
             .images(imageDtos)
             .questions(qnaDtos)
             .build();
-
-        return responseDto;
     }
 
     private AuctionSummaryDto loadAuctionSummary(Long itemId, boolean isComplete) {
