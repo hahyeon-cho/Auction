@@ -75,7 +75,7 @@ public class ItemSearchService {
             regionId = getRegionIdOrThrow(regionName);
         }
 
-        if (keyword != null && !keyword.isBlank()) {
+        if (keyword == null || keyword.isBlank()) {
             return itemRepository.fetchItemPreviewsByFilters(
                 null,        // itemIdList
                 null,              // sellerId

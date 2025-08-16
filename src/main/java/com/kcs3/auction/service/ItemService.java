@@ -134,6 +134,8 @@ public class ItemService {
         try {
             ItemDocument itemDocument = buildItemDocument(requestDto, item, category, region, tradingMethod);
             itemElasticsearchRepository.save(itemDocument);
+        } catch (CommonException e) {
+            throw e;
         } catch (Exception e) {
             throw new CommonException(ErrorCode.ITEM_ELASTIC_SAVE_FAILED);
         }
