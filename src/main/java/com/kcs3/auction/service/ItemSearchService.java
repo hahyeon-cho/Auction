@@ -131,7 +131,7 @@ public class ItemSearchService {
     }
 
     private Long getCategoryIdOrThrow(String categoryName) {
-        Long id = categoryRepository.findIdByCategory(categoryName);
+        Long id = categoryRepository.findIdByCategoryName(categoryName);
         if (id == null) {
             throw new CommonException(ErrorCode.CATEGORY_NOT_FOUND);
         }
@@ -139,7 +139,7 @@ public class ItemSearchService {
     }
 
     private Long getTradingMethodIdOrThrow(Integer tradingMethodCode) {
-        Long id = tradingMethodRepository.findIdByTradingMethod(tradingMethodCode);
+        Long id = tradingMethodRepository.findIdByTmCode(tradingMethodCode);
         if (id == null) {
             throw new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND);
         }

@@ -70,10 +70,10 @@ public class ItemService {
     public void createAuctionItem(ItemCreateRequestDto requestDto, List<MultipartFile> images) {
         User user = authUserProvider.getCurrentUser();
 
-        Category category = categoryRepository.findByCategory(requestDto.getCategory())
+        Category category = categoryRepository.findByCategoryName(requestDto.getCategory())
             .orElseThrow(() -> new CommonException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        TradingMethod tradingMethod = tradingMethodRepository.findByTradingMethod(requestDto.getTradingMethod())
+        TradingMethod tradingMethod = tradingMethodRepository.findByTmCode(requestDto.getTradingMethod())
             .orElseThrow(() -> new CommonException(ErrorCode.TRADING_METHOD_NOT_FOUND));
 
         Region region = regionRepository.findByRegionName(requestDto.getRegion())

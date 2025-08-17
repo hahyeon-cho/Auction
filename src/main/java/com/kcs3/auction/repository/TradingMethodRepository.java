@@ -9,9 +9,9 @@ import org.springframework.data.repository.query.Param;
 public interface TradingMethodRepository extends JpaRepository<TradingMethod, Long> {
 
     // 거래방법 코드로 거래방법 조회
-    Optional<TradingMethod> findByTradingMethod(Integer method);
+    Optional<TradingMethod> findByTmCode(Integer method);
 
     // 거래방법 코드로 거래방법 ID 조회
     @Query("SELECT t.id FROM TradingMethod t WHERE t.tmCode = :code")
-    Long findIdByTradingMethod(@Param("code") Integer code);
+    Long findIdByTmCode(@Param("code") Integer code);
 }

@@ -41,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
 
         @Override
         public Category convert(@NonNull String source) {
-            return categoryRepository.findByCategory(source)
+            return categoryRepository.findByCategoryName(source)
                 .orElseThrow(
                     () -> new IllegalArgumentException("Invalid category name: " + source));
         }

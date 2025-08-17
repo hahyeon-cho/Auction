@@ -9,7 +9,6 @@ import com.kcs3.auction.entity.User;
 import com.kcs3.auction.exception.CommonException;
 import com.kcs3.auction.exception.ErrorCode;
 import com.kcs3.auction.repository.ItemAnswerRepository;
-import com.kcs3.auction.repository.ItemDetailRepository;
 import com.kcs3.auction.repository.ItemQuestionRepository;
 import com.kcs3.auction.repository.ItemRepository;
 import com.kcs3.auction.utils.AuthUserProvider;
@@ -24,7 +23,6 @@ public class ItemQuestionService {
     private final AuthUserProvider authUserProvider;
 
     private final ItemRepository itemRepository;
-    private final ItemDetailRepository itemDetailRepository;
     private final ItemQuestionRepository itemQuestionRepository;
     private final ItemAnswerRepository itemAnswerRepository;
 
@@ -39,7 +37,7 @@ public class ItemQuestionService {
             throw new CommonException(ErrorCode.PERMISSION_DENIED);
         }
 
-        ItemDetail itemDetail = itemDetailRepository.findByItemId(itemId)
+        ItemDetail itemDetail = itemRepository.findItemDetailByItemId(itemId)
             .orElseThrow(() -> new CommonException(ErrorCode.ITEM_DETAIL_NOT_FOUND));
 
         ItemQuestion itemQuestion = ItemQuestion.builder()

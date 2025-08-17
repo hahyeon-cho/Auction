@@ -46,7 +46,7 @@ public class ItemLikeService {
         Item item = itemRepository.findById(itemId)
             .orElseThrow(() -> new CommonException(ErrorCode.ITEM_NOT_FOUND));
 
-        Optional<ItemLike> itemLike = itemLikeRepository.findByUserAndItem(user.getUserId(), item.getItemId());
+        Optional<ItemLike> itemLike = itemLikeRepository.findByUser_UserIdAndItem_ItemId(user.getUserId(), item.getItemId());
 
         if (itemLike.isPresent()) {
             user.getItemLikes().remove(itemLike.get());

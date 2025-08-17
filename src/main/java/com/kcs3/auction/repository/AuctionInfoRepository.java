@@ -16,7 +16,7 @@ public interface AuctionInfoRepository extends JpaRepository<AuctionInfo, Long> 
     @Query("""
         SELECT DISTINCT ai.item.itemId
         FROM AuctionInfo ai
-        WHERE ai.userId = :userId
+        WHERE ai.user.userId = :userId
         ORDER BY ai.createdAt DESC
         """)
     Slice<Long> findItemIdsByUserId(@Param("userId") Long userId, Pageable pageable);
