@@ -1,11 +1,15 @@
 package com.kcs3.auction.support;
 
+import com.kcs3.auction.dto.ItemCreateRequestDto;
+import com.kcs3.auction.entity.AuctionCompleteItem;
+import com.kcs3.auction.entity.AuctionProgressItem;
 import com.kcs3.auction.entity.Category;
 import com.kcs3.auction.entity.Item;
 import com.kcs3.auction.entity.ItemDetail;
 import com.kcs3.auction.entity.Region;
 import com.kcs3.auction.entity.TradingMethod;
 import com.kcs3.auction.entity.User;
+import java.time.LocalDateTime;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public final class TestFixture {
@@ -72,5 +76,73 @@ public final class TestFixture {
 
         ReflectionTestUtils.setField(region, "regionId", regionId);
         return region;
+    }
+
+    public static Region region(Long regionId, String regionName) {
+        Region region = Region.builder()
+            .regionName(regionName)
+            .build();
+
+        ReflectionTestUtils.setField(region, "regionId", regionId);
+        return region;
+    }
+
+    // ===== Auction Item =====
+    public static AuctionProgressItem auctionProgressItem(Item item, String title, int startPrice, int maxPrice) {
+        return AuctionProgressItem.builder()
+            .item(item)
+            .itemTitle(title)
+            .thumbnail("https://test.com/image1.jpg")
+            .location("서울")
+            .bidFinishTime(LocalDateTime.now().plusDays(7))
+            .buyNowPrice(50000)
+            .startPrice(startPrice)
+            .maxPrice(maxPrice)
+            .build();
+    }
+
+    public static AuctionCompleteItem auctionCompleteItem(Item item, String title, int maxPrice) {
+        return AuctionCompleteItem.builder()
+            .item(item)
+            .itemTitle(title)
+            .thumbnail("https://test.com/image1.jpg")
+            .location("서울")
+            .bidFinishTime(LocalDateTime.now().minusDays(1))
+            .buyNowPrice(50000)
+            .startPrice(10000)
+            .maxPrice(maxPrice)
+            .build();
+    }
+
+    // ===== DTO =====
+    public static ItemCreateRequestDto createItemCreateRequestDto() {
+        return ItemCreateRequestDto.builder()
+            .title("테스트 상품")
+            .category("전자기기")
+            .tradingMethod(1)
+            .region("서울")
+            .contents("상품 설명")
+            .startPrice(10000)
+            .buyNowPrice(50000)
+            .finishTime(LocalDateTime.now().plusDays(7))
+            .build();
+    }
+
+    public static ItemCreateRequestDto createItemCreateRequestDto(String region) {
+        return ItemCreateRequestDto.builder()
+            .title("테스트 상품")
+            .category("전자기기")
+            .tradingMethod(1)
+            .region(region)
+            .contents("상품 설명")
+            .startPrice(10000)
+            .buyNowPrice(50000)
+            .finishTime(LocalDateTime.now().plusDays(7))
+            .build();
+    }
+
+    // ===== Auction 상태 변경 =====
+    public static void markAuctionComplete(Item item) {
+        ReflectionTestUtils.setField(item, "isAuctionComplete", true);
     }
 }
