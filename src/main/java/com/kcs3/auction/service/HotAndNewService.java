@@ -81,10 +81,10 @@ public class HotAndNewService {
         Long regionId = Optional.ofNullable(regionRepository.findIdByRegionName(regionName))
             .orElse(1L);
 
-        List<HotAndNewItemDto> items = getItemsFromRedis("new_item:", regionId);
+        List<HotAndNewItemDto> items = getItemsFromRedis("new_items:", regionId);
 
         if (items.isEmpty() && regionId != 1L) {
-            items = getItemsFromRedis("new_item:", 1L);  // fallback
+            items = getItemsFromRedis("new_items:", 1L);  // fallback
         }
 
         if (items.isEmpty()) {
@@ -115,7 +115,7 @@ public class HotAndNewService {
     // 지역별 신규 물품 리스트를 Redis 캐시에 저장
     public void cacheNewItemsByRegion(Long regionId) {
         // 신규 물품 itemId 리스트 조회
-        List<Long> newItemIds = itemRepository.findLatestInProgressItemIdsByRegion(regionId,CACHE_ITEM_PAGEABLE);
+        List<Long> newItemIds = itemRepository.findLatestInProgressItemIdsByRegion(regionId, CACHE_ITEM_PAGEABLE);
 
         List<AuctionProgressItem> newItems = progressItemRepository.findAllWithItemAndCategory(newItemIds);
 
