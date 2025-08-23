@@ -2,7 +2,7 @@
 
 ## 📎 관련 문서
 - [📄 물품 서비스 API 문서](./docs/api-summary.md)
-- <a href="https://hahyeon-cho.notion.site/52panda-22fa0fd71450808a8b54e8a86253c989">
+- <a href="https://hahyeon-cho.notion.site/52panda-32ca0fd714508067b4cee75497beb92c">
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" alt="Notion" width="18" height="18" style="vertical-align:middle;"/> 
   Notion 포트폴리오 </a>
 <br>
@@ -112,4 +112,4 @@
 
 ## ◾트러블슈팅 및 성능 개선
 > 본 프로젝트 전반에 걸친 주요 문제 해결 사례와 성능 개선 내역은  
-[포트폴리오 페이지 내 '주요 문제 상황 및 해결'](https://hahyeon-cho.notion.site/52panda-22fa0fd71450808a8b54e8a86253c989#22fa0fd7145080fb8df9d7dd36e3181e)에서 확인하실 수 있습니다.
+[포트폴리오 페이지 내 '주요 문제 상황 및 해결'](https://hahyeon-cho.notion.site/52panda-32ca0fd714508067b4cee75497beb92c#22fa0fd7145080fb8df9d7dd36e3181e)에서 확인하실 수 있습니다.
